@@ -1,0 +1,12 @@
+name: medium
+
+services:
+  postgres:
+    image: postgres:18
+    container_name: medium-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: dev
+    ports:
+      - 5431:5432
