@@ -1,14 +1,16 @@
-import { Body, Controller, HttpException, Post, InternalServerErrorException } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
-import { UserCreateRequestDto, UserCreateResponseDto } from './dtos/user-create.dto.js';
+import { UserResponseDto } from './dtos/user-base.dto.js';
+import { UserCreateRequestDto } from './dtos/user-create.dto.js';
+import { UserLoginRequestDto } from './dtos/user-login.dto.js';
 
 @Controller('api')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('/users')
-    async register(@Body() userCreateDto: UserCreateRequestDto): Promise<UserCreateResponseDto> {
+    async register(@Body() userCreateDto: UserCreateRequestDto): Promise<UserResponseDto> {
         const user = await this.authService.getUserByEmail(userCreateDto.user.email)
 
         if (user) {
@@ -24,5 +26,41 @@ export class AuthController {
             console.error(error)
             throw new InternalServerErrorException()
         }
+    }
+
+    @HttpCode(200)
+    @Post('/users/login')
+    async login(@Body() userLoginDto: UserLoginRequestDto): Promise<UserResponseDto> {
+        const user = await this.authService.getUserByEmail(userLoginDto.user.email)
+
+        if (!user) {
+            throw new UnauthorizedException()
+        }
+
+        const isPasswordCorrect = this.authService.verifyPassword(userLoginDto.user.password, user.password)
+
+        if (!isPasswordCorrect) {
+            throw new UnauthorizedException()
+        }
+
+        const token = await this.authService.createAccessToken(user)
+
+        return { user: { ...user, token } }
+    }
+
+    @Get('/user')
+    async me(@Headers('Authorization') token: string): Promise<UserResponseDto> {
+        // решить проблему устаревания данных пэйлоада
+        // например, при обновлении биографии пользователя
+        // в действующем токене будет устаревшая информация
+
+        const user = await this.authService.getUserByToken(token)
+
+        if (!user) {
+            throw new UnauthorizedException()
+        }
+
+        // создать dto без токена
+        return { user: { ...user, token: await this.authService.createAccessToken(user) } }
     }
 }

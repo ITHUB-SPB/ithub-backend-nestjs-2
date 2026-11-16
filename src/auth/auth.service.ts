@@ -2,8 +2,8 @@ import { argon2 } from 'node:crypto'
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+// import User
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
-import { UserCurrentDto } from './dtos/user-current.dto.js';
 import { User } from './entities/user.entity.js';
 
 import { JwtSigner, JwtVerifier, CurrentUser } from '@nestjs/authentication'
@@ -37,7 +37,7 @@ export class AuthService {
         })
     }
 
-    async createAccessToken(payload: UserCurrentDto): Promise<string> {
+    async createAccessToken(payload: User): Promise<string> {
         // быть готовым к ошибкам
         return new JwtSigner({ key: jwtSecretKey }).sign({ sub: JSON.stringify(payload) })
     }
@@ -46,6 +46,37 @@ export class AuthService {
         return this.userRepository.findOneBy({
             email
         })
+    }
+
+    async getUserByToken(token: string): Promise<User | null> {
+        if (!token) {
+            return null
+        }
+
+        const parsedToken = token.match(/^Token (.+)$/)
+
+        if (!parsedToken || !parsedToken?.at(1)) {
+            return null
+        }
+
+        const verifier = new JwtVerifier({ key: jwtSecretKey })
+
+        try {
+            const result = await verifier.verify(parsedToken.at(1)!)
+            if (!result.sub) {
+                throw new Error('No subject in result')
+            }
+            return JSON.parse(result.sub)
+        } catch (error) {
+            console.error(error)
+            return null
+        }
+    }
+
+    async verifyPassword(plainPassword: string, correctHashedPassword: string): Promise<boolean> {
+        const hashedPassword = await this.hashPassword(plainPassword)
+
+        return hashedPassword === correctHashedPassword
     }
 
     async register(createUserDto: UserCreateRequestDto): Promise<User> {
