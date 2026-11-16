@@ -18,19 +18,10 @@ export class UserCreateDto {
     email: string;
 }
 
-export class UserUpdateDto {
-    @IsOptional()
+export class UserCreateResultDto {
     username: string;
-
-    @IsOptional()
-    password: string;
-    
-    @IsOptional()
     email: string;
-
-    @IsOptional()
-    bio: string;
-    
-    @IsOptional()
-    image: string;
+    bio: string | null;
+    image: string | null;
+    token: string;
 }
