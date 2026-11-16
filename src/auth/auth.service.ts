@@ -1,12 +1,12 @@
 import { argon2 } from 'node:crypto'
-import { HttpException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { UserCreateDto } from './dtos/user-create.dto.js';
+import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserCurrentDto } from './dtos/user-current.dto.js';
 import { User } from './entities/user.entity.js';
 
-import { JwtSigner } from '@nestjs/authentication'
+import { JwtSigner, JwtVerifier, CurrentUser } from '@nestjs/authentication'
 
 const argon2Key = '69f21d6966c50daf'
 const jwtSecretKey = '63ab69f21d6966c50dafd3f7c607ddd8'
@@ -48,11 +48,11 @@ export class AuthService {
         })
     }
 
-    async register(createUserDto: UserCreateDto): Promise<User> {
-        const hashedPassword = await this.hashPassword(createUserDto.password)
+    async register(createUserDto: UserCreateRequestDto): Promise<User> {
+        const hashedPassword = await this.hashPassword(createUserDto.user.password)
 
         const userToCreate = this.userRepository.create({
-            ...createUserDto,
+            ...createUserDto.user,
             password: hashedPassword
         })
 

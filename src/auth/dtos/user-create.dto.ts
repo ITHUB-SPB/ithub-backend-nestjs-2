@@ -1,7 +1,7 @@
-import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional } from 'class-validator'
+import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional, ValidateNested } from 'class-validator'
 import { ValidationErrorMessage } from '../../common/validation.enum.js';
 
-export class UserCreateDto {
+class UserCreate {
     @IsString({ message: ValidationErrorMessage.REQUIRED })
     @IsNotEmpty({ message: ValidationErrorMessage.REQUIRED })
     // проверка на одно слово
@@ -18,10 +18,21 @@ export class UserCreateDto {
     email: string;
 }
 
-export class UserCreateResultDto {
+// TODO распаковывать пайпом
+export class UserCreateRequestDto {
+    @ValidateNested()
+    user: UserCreate
+}
+
+class UserCreateResult {
     username: string;
     email: string;
     bio: string | null;
     image: string | null;
     token: string;
+}
+
+export class UserCreateResponseDto {
+    @ValidateNested()
+    user: UserCreateResult
 }

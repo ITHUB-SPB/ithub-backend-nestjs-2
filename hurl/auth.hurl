@@ -12,7 +12,7 @@ HTTP 201
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == null
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 [Captures]
@@ -31,7 +31,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == null
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 [Captures]
@@ -45,7 +45,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == null
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 
@@ -62,7 +62,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == "Updated bio"
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 
@@ -74,7 +74,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == "Updated bio"
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 
@@ -141,7 +141,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}"
 jsonpath "$.user.email" == "auth_{{uid}}@test.com"
 jsonpath "$.user.bio" == "Updated bio"
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 
@@ -174,14 +174,14 @@ Authorization: Token {{token}}
 }
 HTTP 200
 [Asserts]
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 
 # Verify image empty string normalization persisted
 GET {{host}}/api/user
 Authorization: Token {{token}}
 HTTP 200
 [Asserts]
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 
 # Set image then update to null - should accept for nullable field
 PUT {{host}}/api/user
@@ -204,14 +204,14 @@ Authorization: Token {{token}}
 }
 HTTP 200
 [Asserts]
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 
-# Verify null image persisted
+# Verify default image persisted
 GET {{host}}/api/user
 Authorization: Token {{token}}
 HTTP 200
 [Asserts]
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 
 # Update username and email
 PUT {{host}}/api/user
@@ -227,7 +227,7 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}_upd"
 jsonpath "$.user.email" == "auth_{{uid}}_upd@test.com"
 jsonpath "$.user.bio" == "Updated bio"
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
 [Captures]
@@ -241,6 +241,6 @@ HTTP 200
 jsonpath "$.user.username" == "auth_{{uid}}_upd"
 jsonpath "$.user.email" == "auth_{{uid}}_upd@test.com"
 jsonpath "$.user.bio" == "Updated bio"
-jsonpath "$.user.image" == null
+jsonpath "$.user.image" == "default-avatar.png"
 jsonpath "$.user.token" isString
 jsonpath "$.user.token" not isEmpty
