@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
-import { UserResponseDto } from './dtos/user-base.dto.js';
+import { UserResponseDto, UserResult } from './dtos/user-base.dto.js';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserLoginRequestDto } from './dtos/user-login.dto.js';
 
@@ -20,7 +20,7 @@ export class AuthController {
         try {
             const createdUser = await this.authService.register(userCreateDto)
             const token = await this.authService.createAccessToken(createdUser)
-            return { user: { ...createdUser, token } }
+            return new UserResponseDto({ ...createdUser, token })
         } catch (error) {
             // подумать, может быть стоит разделить по типам ошибок
             console.error(error)

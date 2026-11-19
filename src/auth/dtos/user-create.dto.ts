@@ -23,16 +23,3 @@ export class UserCreateRequestDto {
     @ValidateNested()
     user: UserCreate
 }
-
-class UserCreateResult {
-    username: string;
-    email: string;
-    bio: string | null;
-    image: string | null;
-    token: string;
-}
-
-export class UserCreateResponseDto {
-    @ValidateNested()
-    user: UserCreateResult
-}
