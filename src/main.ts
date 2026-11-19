@@ -15,10 +15,10 @@ async function bootstrap() {
     .setDescription('Realworld API docs')
     .addBearerAuth({
       type: "http",
-      bearerFormat: "Bearer",
+      bearerFormat: "JWT",
       scheme: "Bearer",
       in: "Header"
-    })
+    }, 'JWT')
     .setVersion('1.0')
     .build();
 

@@ -7,8 +7,12 @@ import request from "supertest";
 import { expect, assert } from 'vitest'
 import { App } from "supertest/types.js";
 
+import { ArticlesModule } from "../src/articles/articles.module.js";
 import { AuthModule } from "../src/auth/auth.module.js";
 import { User } from "../src/auth/entities/user.entity.js";
+import { Article } from "../src/articles/entities/article.entity.js";
+
+import { loginHelper, registerHelper } from "./helpers.js";
 
 describe("AuthController (e2e)", () => {
   let app: INestApplication<App>;
@@ -17,6 +21,7 @@ describe("AuthController (e2e)", () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
         AuthModule,
+        ArticlesModule,
         TypeOrmModule.forRoot({
           type: "postgres",
           host: "localhost",
@@ -25,7 +30,7 @@ describe("AuthController (e2e)", () => {
           password: 'postgres',
           database: 'dev',
           synchronize: true, // не забыть выключить в проде
-          entities: [User]
+          entities: [User, Article]
         }),
       ],
     }).compile();
@@ -35,21 +40,16 @@ describe("AuthController (e2e)", () => {
     app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
 
     const userRepository = app.get<Repository<User>>(getRepositoryToken(User));
-    await userRepository.clear()
+    const articleRepository = app.get<Repository<Article>>(getRepositoryToken(Article));
+
+    await userRepository.clear({ cascade: true })
+    await articleRepository.clear({ cascade: true })
 
     await app.init();
   });
 
   it("REGISTER /api/users (POST)", async () => {
     const uid = 1
-
-    const body = {
-      user: {
-        username: `auth_${uid}`,
-        email: `auth_${uid}@test.com`,
-        password: `password123`
-      }
-    }
 
     const expectedResponse = {
       user: {
@@ -60,9 +60,7 @@ describe("AuthController (e2e)", () => {
       }
     }
 
-    const response = await request(app.getHttpServer())
-      .post("/api/users")
-      .send(body)
+    const response = await registerHelper(app, uid)
 
     expect(response.statusCode).toBe(201)
     expect(response.body).toMatchObject(expectedResponse)
@@ -76,22 +74,7 @@ describe("AuthController (e2e)", () => {
   it("LOGIN /api/users/login (POST)", async () => {
     const uid = 1
 
-    await request(app.getHttpServer())
-      .post("/api/users")
-      .send({
-        user: {
-          username: `auth_${uid}`,
-          email: `auth_${uid}@test.com`,
-          password: `password123`
-        }
-      })
-
-    const body = {
-      user: {
-        email: `auth_${uid}@test.com`,
-        password: `password123`
-      }
-    }
+    await registerHelper(app, uid)
 
     const expectedResponse = {
       user: {
@@ -102,9 +85,37 @@ describe("AuthController (e2e)", () => {
       }
     }
 
+    const response = await loginHelper(app, uid)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject(expectedResponse)
+
+    assert.isString(response.body.user?.token)
+    assert.isNotEmpty(response.body.user.token)
+
+    assert.notExists(response.body.user?.password)
+  });
+
+  it("GET CURRENT /api/user (GET)", async () => {
+    const uid = 1
+
+    await registerHelper(app, uid)
+    const loginResponse = await loginHelper(app, uid)
+
+    const token = loginResponse.body.user.token
+
     const response = await request(app.getHttpServer())
-      .post("/api/users/login")
-      .send(body)
+      .get('/api/user')
+      .set('Authorization', `Token ${token}`)
+
+    const expectedResponse = {
+      user: {
+        username: `auth_${uid}`,
+        email: `auth_${uid}@test.com`,
+        bio: null,
+        image: "default-avatar.png",
+      }
+    }
 
     expect(response.statusCode).toBe(200)
     expect(response.body).toMatchObject(expectedResponse)

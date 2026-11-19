@@ -1,5 +1,5 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode } from '@nestjs/common';
-import { ApiCreatedResponse } from '@nestjs/swagger';
+import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
@@ -50,19 +50,24 @@ export class AuthController {
         return new UserResponseDto({ ...user, token })
     }
 
+    @ApiBearerAuth('JWT')
     @Get('/user')
-    async me(@Headers('Authorization') token: string): Promise<UserResponseDto> {
+    async me(
+        @Headers('Authorization') authorizationHeader: string,
+    ): Promise<UserResponseDto> {
         // решить проблему устаревания данных пэйлоада
         // например, при обновлении биографии пользователя
         // в действующем токене будет устаревшая информация
 
-        const user = await this.authService.getUserByToken(token)
+        const user = await this.authService.getUserByToken(authorizationHeader)
 
         if (!user) {
             throw new UnauthorizedException()
         }
 
-        // создать dto без токена
-        return { user: { ...user, token: await this.authService.createAccessToken(user) } }
+        return new UserResponseDto({
+            ...user,
+            token: await this.authService.createAccessToken(user)
+        })
     }
 }

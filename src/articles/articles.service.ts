@@ -18,9 +18,7 @@ export class ArticlesService {
     private readonly authService: AuthService
   ) { }
 
-  async create(createArticleDtoWithUser: CreateArticleDto & { userEmail: string }) {
-    console.log(createArticleDtoWithUser)
-
+  async create(createArticleDtoWithUser: CreateArticleDto & { userEmail: string }): Promise<Article | null> {
     const author = await this.authService
       .getUserByEmail(createArticleDtoWithUser.userEmail)
 

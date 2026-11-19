@@ -1,15 +1,3 @@
-# Get current user
-GET {{host}}/api/user
-Authorization: Token {{token}}
-HTTP 200
-[Asserts]
-jsonpath "$.user.username" == "auth_{{uid}}"
-jsonpath "$.user.email" == "auth_{{uid}}@test.com"
-jsonpath "$.user.bio" == null
-jsonpath "$.user.image" == "default-avatar.png"
-jsonpath "$.user.token" isString
-jsonpath "$.user.token" not isEmpty
-
 # Update user
 PUT {{host}}/api/user
 Authorization: Token {{token}}

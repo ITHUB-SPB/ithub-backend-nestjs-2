@@ -8,7 +8,7 @@ import { ArticleResponseDto } from './dto/article.dto.js';
 
 import { AuthService } from '../auth/auth.service.js';
 
-@Controller('articles')
+@Controller('api/articles')
 export class ArticlesController {
   constructor(
     private readonly articlesService: ArticlesService,
@@ -16,9 +16,12 @@ export class ArticlesController {
   ) { }
 
 
-  @ApiBearerAuth()
+  @ApiBearerAuth('JWT')
   @Post()
-  async create(@Headers('Authorization') authorizationHeader: string, @Body() createArticleDto: CreateArticleDto) {
+  async create(
+    @Headers('Authorization') authorizationHeader: string,
+    @Body() createArticleDto: CreateArticleDto
+  ) {
     const user = await this.authService.getUserByToken(authorizationHeader)
 
     if (!user) {
@@ -34,9 +37,10 @@ export class ArticlesController {
       throw new ConflictException()
     }
 
-    console.log(createdArticle)
-
-    return new ArticleResponseDto(createdArticle)
+    return new ArticleResponseDto({
+      ...createdArticle,
+      author: { ...createdArticle.author, following: false }
+    })
   }
 
   @Get(':slug')

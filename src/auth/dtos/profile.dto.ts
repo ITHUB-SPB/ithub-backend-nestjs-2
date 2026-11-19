@@ -16,9 +16,6 @@ export class ProfileResult {
 
     image: string | null;
 
-    @Exclude()
-    token: string;
-
     following: boolean;
 
     constructor(data: Partial<ProfileResult>) {
