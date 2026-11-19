@@ -1,10 +1,12 @@
 import { Test, TestingModule } from "@nestjs/testing";
-import { INestApplication } from "@nestjs/common";
+import { Reflector } from "@nestjs/core";
+import { INestApplication, ClassSerializerInterceptor } from "@nestjs/common";
 import { TypeOrmModule, getRepositoryToken } from "@nestjs/typeorm";
 import { type Repository } from "typeorm";
 import request from "supertest";
 import { expect, assert } from 'vitest'
 import { App } from "supertest/types.js";
+
 import { AuthModule } from "../src/auth/auth.module.js";
 import { User } from "../src/auth/entities/user.entity.js";
 
@@ -30,13 +32,15 @@ describe("AuthController (e2e)", () => {
 
     app = moduleFixture.createNestApplication();
 
+    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
+
     const userRepository = app.get<Repository<User>>(getRepositoryToken(User));
     await userRepository.clear()
 
     await app.init();
   });
 
-  it("/api/users (POST)", async () => {
+  it("REGISTER /api/users (POST)", async () => {
     const uid = 1
 
     const body = {
@@ -63,10 +67,50 @@ describe("AuthController (e2e)", () => {
     expect(response.statusCode).toBe(201)
     expect(response.body).toMatchObject(expectedResponse)
 
-    for (const property of ['token', 'id', 'password']) {
-      assert.isString(response.body.user?.[property])
-      assert.isNotEmpty(response.body.user[property])
+    assert.isString(response.body.user?.token)
+    assert.isNotEmpty(response.body.user.token)
+
+    assert.notExists(response.body.user?.password)
+  });
+
+  it("LOGIN /api/users/login (POST)", async () => {
+    const uid = 1
+
+    await request(app.getHttpServer())
+      .post("/api/users")
+      .send({
+        user: {
+          username: `auth_${uid}`,
+          email: `auth_${uid}@test.com`,
+          password: `password123`
+        }
+      })
+
+    const body = {
+      user: {
+        email: `auth_${uid}@test.com`,
+        password: `password123`
+      }
     }
+
+    const expectedResponse = {
+      user: {
+        username: `auth_${uid}`,
+        email: `auth_${uid}@test.com`,
+        bio: null,
+        image: "default-avatar.png"
+      }
+    }
+
+    const response = await request(app.getHttpServer())
+      .post("/api/users/login")
+      .send(body)
+
+    expect(response.statusCode).toBe(200)
+    expect(response.body).toMatchObject(expectedResponse)
+
+    assert.isString(response.body.user?.token)
+    assert.isNotEmpty(response.body.user.token)
 
     assert.notExists(response.body.user?.password)
   });

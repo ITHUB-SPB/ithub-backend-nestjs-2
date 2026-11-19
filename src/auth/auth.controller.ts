@@ -45,7 +45,7 @@ export class AuthController {
 
         const token = await this.authService.createAccessToken(user)
 
-        return { user: { ...user, token } }
+        return new UserResponseDto({ ...user, token })
     }
 
     @Get('/user')

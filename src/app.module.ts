@@ -4,6 +4,8 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AppController } from "./app.controller.js";
 import { AuthModule } from './auth/auth.module.js';
 import { User } from "./auth/entities/user.entity.js";
+import { ArticlesModule } from './articles/articles.module.js';
+import { ArticlesModule } from './articles/articles.module.js';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -28,6 +30,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       entities: [User]
     }),
     AuthModule,
+    ArticlesModule,
   ],
   controllers: [AppController],
 })
