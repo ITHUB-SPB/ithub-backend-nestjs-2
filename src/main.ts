@@ -13,6 +13,12 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle('Realworld example')
     .setDescription('Realworld API docs')
+    .addBearerAuth({
+      type: "http",
+      bearerFormat: "Bearer",
+      scheme: "Bearer",
+      in: "Header"
+    })
     .setVersion('1.0')
     .build();
 

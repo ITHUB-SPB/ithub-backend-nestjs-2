@@ -1,4 +1,6 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Headers, ForbiddenException } from '@nestjs/common';
+import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger'
+
 import { ArticlesService } from './articles.service.js';
 import { CreateArticleDto } from './dto/create-article.dto.js';
 import { UpdateArticleDto } from './dto/update-article.dto.js';
@@ -11,9 +13,20 @@ export class ArticlesController {
     private readonly authService: AuthService
   ) { }
 
+
+  @ApiBearerAuth()
   @Post()
-  create(@Body() createArticleDto: CreateArticleDto) {
-    return this.articlesService.create(createArticleDto);
+  async create(@Headers('Authorization') authorizationHeader: string, @Body() createArticleDto: CreateArticleDto) {
+    const user = await this.authService.getUserByToken(authorizationHeader)
+
+    if (!user) {
+      throw new ForbiddenException()
+    }
+
+    return this.articlesService.create({
+      ...createArticleDto,
+      username: user.username
+    });
   }
 
   @Get(':slug')

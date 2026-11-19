@@ -53,16 +53,16 @@ export class AuthService {
             return null
         }
 
-        const parsedToken = token.match(/^Token (.+)$/)
+        const parsedToken = token.match(/^(Token|Bearer) (.+)$/)
 
-        if (!parsedToken || !parsedToken?.at(1)) {
+        if (!parsedToken || !parsedToken?.at(2)) {
             return null
         }
 
         const verifier = new JwtVerifier({ key: jwtSecretKey })
 
         try {
-            const result = await verifier.verify(parsedToken.at(1)!)
+            const result = await verifier.verify(parsedToken.at(2)!)
             if (!result.sub) {
                 throw new Error('No subject in result')
             }

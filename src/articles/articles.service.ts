@@ -19,7 +19,8 @@ export class ArticlesService {
     private readonly authService: AuthService
   ) { }
 
-  create(createArticleDto: CreateArticleDto) {
+  create(createArticleDtoWithUser: CreateArticleDto & { username: string }) {
+    console.log(createArticleDtoWithUser)
     return 'This action adds a new article';
   }
 
