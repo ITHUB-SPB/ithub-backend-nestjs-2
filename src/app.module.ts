@@ -1,11 +1,14 @@
 import { Module } from "@nestjs/common";
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
+
 import { AppController } from "./app.controller.js";
+
 import { AuthModule } from './auth/auth.module.js';
+import { ArticlesModule } from './articles/articles.module.js';
+
 import { User } from "./auth/entities/user.entity.js";
-import { ArticlesModule } from './articles/articles.module.js';
-import { ArticlesModule } from './articles/articles.module.js';
+import { Article } from "./articles/entities/article.entity.js";
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -27,7 +30,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       password: 'postgres',
       database: 'dev',
       synchronize: true, // не забыть выключить в проде
-      entities: [User]
+      entities: [User, Article]
     }),
     AuthModule,
     ArticlesModule,

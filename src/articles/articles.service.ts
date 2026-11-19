@@ -1,9 +1,24 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+
 import { CreateArticleDto } from './dto/create-article.dto.js';
 import { UpdateArticleDto } from './dto/update-article.dto.js';
 
+import { Article } from './entities/article.entity.js';
+
+import { AuthService } from '../auth/auth.service.js';
+
+
 @Injectable()
 export class ArticlesService {
+  constructor(
+    @InjectRepository(Article)
+    private readonly articleRepository: Repository<Article>,
+
+    private readonly authService: AuthService
+  ) { }
+
   create(createArticleDto: CreateArticleDto) {
     return 'This action adds a new article';
   }
@@ -12,15 +27,15 @@ export class ArticlesService {
     return `This action returns all articles`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} article`;
+  findOne(slug: string) {
+    return `This action returns a #${slug} article`;
   }
 
-  update(id: number, updateArticleDto: UpdateArticleDto) {
-    return `This action updates a #${id} article`;
+  update(slug: string, updateArticleDto: UpdateArticleDto) {
+    return `This action updates a #${slug} article`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} article`;
+  remove(slug: string) {
+    return `This action removes a #${slug} article`;
   }
 }

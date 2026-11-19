@@ -1,4 +1,5 @@
-import { Entity, Column, PrimaryGeneratedColumn } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Article } from '../../articles/entities/article.entity.js';
 
 @Entity()
 export class User {
@@ -19,4 +20,7 @@ export class User {
 
     @Column({ default: "default-avatar.png" })
     image: string;
+
+    @OneToMany(() => Article, article => article.author)
+    articles: Article[]
 }
