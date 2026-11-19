@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Headers, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Headers, ForbiddenException, HttpException, ConflictException } from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger'
 
 import { ArticlesService } from './articles.service.js';
 import { CreateArticleDto } from './dto/create-article.dto.js';
 import { UpdateArticleDto } from './dto/update-article.dto.js';
+import { ArticleResponseDto } from './dto/article.dto.js';
+
 import { AuthService } from '../auth/auth.service.js';
 
 @Controller('articles')
@@ -23,10 +25,18 @@ export class ArticlesController {
       throw new ForbiddenException()
     }
 
-    return this.articlesService.create({
+    const createdArticle = await this.articlesService.create({
       ...createArticleDto,
-      username: user.username
+      userEmail: user.email
     });
+
+    if (!createdArticle) {
+      throw new ConflictException()
+    }
+
+    console.log(createdArticle)
+
+    return new ArticleResponseDto(createdArticle)
   }
 
   @Get(':slug')

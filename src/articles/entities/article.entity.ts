@@ -9,6 +9,6 @@ export class Article {
     @Column()
     title: string;
 
-    @ManyToOne('User', (user: User) => user.articles)
+    @ManyToOne('User', (user: User) => user.articles, { cascade: true })
     author: User
 }

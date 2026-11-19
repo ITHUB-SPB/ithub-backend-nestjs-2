@@ -1,4 +1,6 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode } from '@nestjs/common';
+import { ApiCreatedResponse } from '@nestjs/swagger';
+
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
 import { UserResponseDto, UserResult } from './dtos/user-base.dto.js';

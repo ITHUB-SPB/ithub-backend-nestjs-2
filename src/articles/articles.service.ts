@@ -6,7 +6,6 @@ import { CreateArticleDto } from './dto/create-article.dto.js';
 import { UpdateArticleDto } from './dto/update-article.dto.js';
 
 import { Article } from './entities/article.entity.js';
-
 import { AuthService } from '../auth/auth.service.js';
 
 
@@ -19,9 +18,20 @@ export class ArticlesService {
     private readonly authService: AuthService
   ) { }
 
-  create(createArticleDtoWithUser: CreateArticleDto & { username: string }) {
+  async create(createArticleDtoWithUser: CreateArticleDto & { userEmail: string }) {
     console.log(createArticleDtoWithUser)
-    return 'This action adds a new article';
+
+    const author = await this.authService
+      .getUserByEmail(createArticleDtoWithUser.userEmail)
+
+    if (!author) {
+      return null
+    }
+
+    return await this.articleRepository.save({
+      title: createArticleDtoWithUser.article.title,
+      author
+    })
   }
 
   findAll() {
