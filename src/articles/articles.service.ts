@@ -32,10 +32,6 @@ export class ArticlesService {
     })
   }
 
-  findAll() {
-    return `This action returns all articles`;
-  }
-
   findOne(slug: string) {
     return `This action returns a #${slug} article`;
   }

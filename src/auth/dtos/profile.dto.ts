@@ -16,8 +16,6 @@ export class ProfileResult {
 
     image: string | null;
 
-    following: boolean;
-
     constructor(data: Partial<ProfileResult>) {
         Object.assign(this, data)
     }

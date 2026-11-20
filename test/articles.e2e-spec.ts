@@ -67,8 +67,6 @@ describe("ArticlesController (e2e)", () => {
         description: "Test description",
         body: "Test body content",
         tagList: [`d_${uid}`, `t_${uid}`],
-        favorited: false,
-        favoritesCount: 0,
         author: {
           username: `art_${uid}`
         }

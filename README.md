@@ -10,6 +10,30 @@
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
 <a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
 
+## КТ #2. Пользователи, базовый функционал статей. Работа с данными через `TypeORM`. Сквозные тесты на `vitest` и `supertest`.
+
+В данной контрольной точке вам предлагается реализовать и протестировать часть функционала согласно спецификации
+
+### Пользователи
+
+- Получение профиля `GET /api/profiles/:username`
+
+### Теги
+
+- Получение тегов `GET /api/tags`
+
+### Статьи
+
+_При реализации используйте упрощенные схемы, без полей `favorited`, `favoritesCount`, `following`_
+
+- Получение статьи `GET /api/articles/:slug`
+
+- Создание статьи `POST /api/articles`
+
+- Обновление статьи `PUT /api/articles/:slug`
+
+- Удаление статьи `DELETE /api/articles/:slug`
+
 ## Спецификация
 
 ### Схемы ответов

@@ -39,7 +39,7 @@ export class ArticlesController {
 
     return new ArticleResponseDto({
       ...createdArticle,
-      author: { ...createdArticle.author, following: false }
+      author: { ...createdArticle.author }
     })
   }
 
@@ -57,15 +57,4 @@ export class ArticlesController {
   remove(@Param('slug') slug: string) {
     return this.articlesService.remove(slug);
   }
-
-  @Get('/feed')
-  feed() {
-    return this.articlesService.findAll();
-  }
-
-  @Get()
-  findAll() {
-    return this.articlesService.findAll();
-  }
-
 }

@@ -3,7 +3,7 @@ import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
-import { UserResponseDto, UserResult } from './dtos/user-base.dto.js';
+import { UserResponseDto, UserResult } from './dtos/user.dto.js';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserLoginRequestDto } from './dtos/user-login.dto.js';
 
