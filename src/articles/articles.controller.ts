@@ -1,10 +1,9 @@
-import { Controller, Get, Post, Body, Put, Param, Delete, Headers, ForbiddenException, HttpException, ConflictException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Delete, Headers, ForbiddenException, HttpException, ConflictException } from '@nestjs/common';
 import AuthToken from '../common/auth-token.decorator.js';
 import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger'
 
 import { ArticlesService } from './articles.service.js';
 import { CreateArticleDto } from './dto/create-article.dto.js';
-import { UpdateArticleDto } from './dto/update-article.dto.js';
 import { ArticleResponseDto } from './dto/article.dto.js';
 
 import { AuthService } from '../auth/auth.service.js';
@@ -47,11 +46,6 @@ export class ArticlesController {
   @Get(':slug')
   findOne(@Param('slug') slug: string) {
     return this.articlesService.findOne(slug);
-  }
-
-  @Put(':slug')
-  update(@Param('slug') slug: string, @Body() updateArticleDto: UpdateArticleDto) {
-    return this.articlesService.update(slug, updateArticleDto);
   }
 
   @Delete(':slug')

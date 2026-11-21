@@ -1,10 +1,18 @@
-import { Expose, Exclude, Type } from 'class-transformer'
-import { ProfileResult } from '../../auth/dtos/profile.dto.js';
+import { Expose, Exclude, Type, Transform } from 'class-transformer'
 import { ValidateNested } from 'class-validator';
+import { ProfileResult } from '../../auth/dtos/profile.dto.js';
 
 export class ArticleResult {
     @Expose()
     title: string;
+
+    @Expose()
+    slug: string;
+
+    @Expose()
+    @Type(() => String)
+    @Transform(({ value }) => value.toISOString())
+    createdAt: Date;
 
     @Expose()
     @ValidateNested()
@@ -19,6 +27,7 @@ export class ArticleResponseDto {
     article: ArticleResult
 
     constructor(data: ArticleResult) {
+        console.log(data)
         this.article = data
     }
 }

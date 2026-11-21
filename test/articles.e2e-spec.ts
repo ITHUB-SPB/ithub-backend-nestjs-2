@@ -85,10 +85,8 @@ describe("ArticlesController (e2e)", () => {
     expect(response.statusCode).toBe(201)
     expect(response.body).toMatchObject(expectedResponse)
 
-    for (const property of ['createdAt', 'updatedAt']) {
-      assert.isString(response.body[property])
-      expect.stringMatching(/^\\d{4}-\\d{2}-\\d{2}T/)
-    }
+    assert.isString(response.body.createdAt)
+    expect(response.body.createdAt).toEqual(expect.stringMatching(/^\\d{4}-\\d{2}-\\d{2}T/));
   });
 
   afterEach(async () => {

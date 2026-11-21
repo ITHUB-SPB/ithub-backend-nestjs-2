@@ -69,7 +69,7 @@ export class AuthController {
 
         return new UserResponseDto({
             ...user,
-            token: await this.authService.createAccessToken(user)
+            token: authorizationToken.match(/^(Token|Bearer) (.+)$/)!.at(2)!
         })
     }
 }

@@ -3,7 +3,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { CreateArticleDto } from './dto/create-article.dto.js';
-import { UpdateArticleDto } from './dto/update-article.dto.js';
 
 import { Article } from './entities/article.entity.js';
 import { AuthService } from '../auth/auth.service.js';
@@ -26,18 +25,16 @@ export class ArticlesService {
       return null
     }
 
-    return await this.articleRepository.save({
+    const newArticle = this.articleRepository.create({
       title: createArticleDtoWithUser.article.title,
       author
     })
+
+    return await this.articleRepository.save(newArticle)
   }
 
   findOne(slug: string) {
     return `This action returns a #${slug} article`;
-  }
-
-  update(slug: string, updateArticleDto: UpdateArticleDto) {
-    return `This action updates a #${slug} article`;
   }
 
   remove(slug: string) {
