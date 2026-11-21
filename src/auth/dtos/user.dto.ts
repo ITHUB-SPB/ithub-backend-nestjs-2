@@ -2,30 +2,33 @@ import { ValidateNested } from 'class-validator'
 import { Expose, Exclude, Type } from 'class-transformer'
 
 export class UserResult {
-    @Exclude()
-    id: string;
-
+    @Expose()
     username: string;
 
-    @Exclude()
-    password: string;
-
+    @Expose()
     email: string;
 
+    @Expose()
     bio: string | null;
+
+    @Expose()
     image: string | null;
+
+    @Expose()
     token: string;
 
-    constructor(data: Partial<UserResult>) {
+    constructor(data: UserResult) {
         Object.assign(this, data)
     }
 }
 
 export class UserResponseDto {
+    @ValidateNested()
+    @Expose()
     @Type(() => UserResult)
     user: UserResult
 
     constructor(data: UserResult) {
-        this.user = data
+        this.user = new UserResult(data)
     }
 }

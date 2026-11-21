@@ -1,4 +1,5 @@
 import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional } from 'class-validator'
+import { Type } from 'class-transformer';
 import { ValidationErrorMessage } from '../../common/validation.enum.js';
 
 export class UserUpdateDto {

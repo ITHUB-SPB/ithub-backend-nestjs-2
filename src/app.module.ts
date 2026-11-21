@@ -1,4 +1,6 @@
-import { Module } from "@nestjs/common";
+import { Module, ClassSerializerInterceptor } from "@nestjs/common";
+import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
+
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
@@ -34,6 +36,18 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     }),
     AuthModule,
     ArticlesModule,
+  ],
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      inject: [Reflector],
+      useFactory: (reflector: Reflector) => {
+        return new ClassSerializerInterceptor(reflector, {
+          enableImplicitConversion: false,
+          excludeExtraneousValues: true,
+        });
+      },
+    },
   ],
   controllers: [AppController],
 })

@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Put, Param, Delete, Headers, ForbiddenException, HttpException, ConflictException } from '@nestjs/common';
+import AuthToken from '../common/auth-token.decorator.js';
 import { ApiBearerAuth, ApiSecurity } from '@nestjs/swagger'
 
 import { ArticlesService } from './articles.service.js';
@@ -19,10 +20,10 @@ export class ArticlesController {
   @ApiBearerAuth('JWT')
   @Post()
   async create(
-    @Headers('Authorization') authorizationHeader: string,
+    @AuthToken() authorizationToken: string,
     @Body() createArticleDto: CreateArticleDto
   ) {
-    const user = await this.authService.getUserByToken(authorizationHeader)
+    const user = await this.authService.getUserByToken(authorizationToken)
 
     if (!user) {
       throw new ForbiddenException()

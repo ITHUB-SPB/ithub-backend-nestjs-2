@@ -1,4 +1,5 @@
 import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional, ValidateNested } from 'class-validator'
+import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ValidationErrorMessage } from '../../common/validation.enum.js';
 
@@ -19,18 +20,6 @@ class UserLogin {
 // TODO распаковывать пайпом
 export class UserLoginRequestDto {
     @ValidateNested()
+    @Type(() => UserLogin)
     user: UserLogin
-}
-
-class UserLoginResult {
-    username: string;
-    email: string;
-    bio: string | null;
-    image: string | null;
-    token: string;
-}
-
-export class UserLoginResponseDto {
-    @ValidateNested()
-    user: UserLoginResult
 }

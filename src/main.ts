@@ -1,5 +1,5 @@
 import { NestFactory, Reflector } from "@nestjs/core";
-import { ClassSerializerInterceptor } from "@nestjs/common";
+import { ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from "./app.module.js";
 
@@ -9,6 +9,13 @@ async function bootstrap() {
     routeResolutionStrategy: "specificity",
     routeConflictPolicy: { duplicate: "error", shadow: "error" }
   });
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
+  );
 
   const config = new DocumentBuilder()
     .setTitle('Realworld example')
@@ -24,8 +31,6 @@ async function bootstrap() {
 
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);
-
-  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
 
   await app.listen(process.env.PORT ?? 3000);
 }

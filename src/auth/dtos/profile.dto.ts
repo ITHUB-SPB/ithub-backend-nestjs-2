@@ -1,31 +1,16 @@
-import { Exclude, Type } from 'class-transformer'
+import { Exclude, Expose, Type } from 'class-transformer'
 
 export class ProfileResult {
-    @Exclude()
-    id: string;
-
+    @Expose()
     username: string;
 
-    @Exclude()
-    password: string;
-
-    @Exclude()
-    email: string;
-
+    @Expose()
     bio: string | null;
 
+    @Expose()
     image: string | null;
 
     constructor(data: Partial<ProfileResult>) {
         Object.assign(this, data)
     }
 }
-
-// export class UserResponseDto {
-//     @Type(() => UserResult)
-//     user: UserResult
-
-//     constructor(data: UserResult) {
-//         this.user = data
-//     }
-// }

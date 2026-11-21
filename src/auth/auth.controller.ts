@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 
 import { AuthService } from './auth.service.js';
@@ -6,12 +6,14 @@ import { ValidationErrorMessage } from '../common/validation.enum.js';
 import { UserResponseDto, UserResult } from './dtos/user.dto.js';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserLoginRequestDto } from './dtos/user-login.dto.js';
+import AuthToken from '../common/auth-token.decorator.js';
 
 @Controller('api')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
     @Post('/users')
+    @SerializeOptions({ type: UserResponseDto })
     async register(@Body() userCreateDto: UserCreateRequestDto): Promise<UserResponseDto> {
         const user = await this.authService.getUserByEmail(userCreateDto.user.email)
 
@@ -53,13 +55,13 @@ export class AuthController {
     @ApiBearerAuth('JWT')
     @Get('/user')
     async me(
-        @Headers('Authorization') authorizationHeader: string,
+        @AuthToken() authorizationToken: string,
     ): Promise<UserResponseDto> {
         // решить проблему устаревания данных пэйлоада
         // например, при обновлении биографии пользователя
         // в действующем токене будет устаревшая информация
 
-        const user = await this.authService.getUserByToken(authorizationHeader)
+        const user = await this.authService.getUserByToken(authorizationToken)
 
         if (!user) {
             throw new UnauthorizedException()
