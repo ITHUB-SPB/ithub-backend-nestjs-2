@@ -48,6 +48,13 @@ export class AuthService {
         })
     }
 
+    async getUserByUsername(username: string): Promise<User | null> {
+    return await this.userRepository.findOneBy({
+        username,
+        })
+    }
+
+
     async getUserByToken(token: string): Promise<User | null> {
         if (!token) {
             return null

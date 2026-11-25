@@ -9,6 +9,16 @@ export class Article {
     @Column()
     title: string;
 
+    @Column({ type: 'text' })
+    description: string;
+
+    @Column({ type: 'text' })
+    body: string;
+
+    @Column('simple-array', { default: '' })
+    tagList: string[];
+
+
     @ManyToOne('User', (user: User) => user.articles, { cascade: true })
     author: User
 

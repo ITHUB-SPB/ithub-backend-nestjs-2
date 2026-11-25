@@ -8,6 +8,11 @@ import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserLoginRequestDto } from './dtos/user-login.dto.js';
 import AuthToken from '../common/auth-token.decorator.js';
 
+import { Param, NotFoundException } from '@nestjs/common';
+import { ProfileResult, ProfileResponseDto } from './dtos/profile.dto.js';
+
+import { ConflictException } from '@nestjs/common';
+
 @Controller('api')
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
@@ -15,11 +20,31 @@ export class AuthController {
     @Post('/users')
     @SerializeOptions({ type: UserResponseDto })
     async register(@Body() userCreateDto: UserCreateRequestDto): Promise<UserResponseDto> {
-        const user = await this.authService.getUserByEmail(userCreateDto.user.email)
+        
+    const usernameTaken = await this.authService.getUserByUsername(
+        userCreateDto.user.username,
+    );
 
-        if (user) {
-            throw new HttpException(ValidationErrorMessage.CONFLICT, 422)
-        }
+    if (usernameTaken) {
+    throw new ConflictException({
+        errors: {
+        username: [ValidationErrorMessage.CONFLICT],
+        },
+    });
+    }
+
+    const emailTaken = await this.authService.getUserByEmail(
+        userCreateDto.user.email,
+    );
+
+    if (emailTaken) {
+    throw new ConflictException({
+        errors: {
+        email: [ValidationErrorMessage.CONFLICT],
+        },
+    });
+    }
+
 
         try {
             const createdUser = await this.authService.register(userCreateDto)
@@ -38,13 +63,25 @@ export class AuthController {
         const user = await this.authService.getUserByEmail(userLoginDto.user.email)
 
         if (!user) {
-            throw new UnauthorizedException()
+            throw new UnauthorizedException({
+                errors: {
+                    credentials: ['invalid'],
+                },
+            });
         }
 
-        const isPasswordCorrect = this.authService.verifyPassword(userLoginDto.user.password, user.password)
+        const isPasswordCorrect = await this.authService.verifyPassword(
+            userLoginDto.user.password,
+            user.password,
+            );
+
 
         if (!isPasswordCorrect) {
-            throw new UnauthorizedException()
+            throw new UnauthorizedException({
+                errors: {
+                    credentials: ['invalid'],
+                },
+        });
         }
 
         const token = await this.authService.createAccessToken(user)
@@ -71,5 +108,27 @@ export class AuthController {
             ...user,
             token: authorizationToken.match(/^(Token|Bearer) (.+)$/)!.at(2)!
         })
+    }
+
+
+    @Get('/profiles/:username')
+    async getProfile(
+    @Param('username') username: string,
+    ): Promise<ProfileResponseDto> {
+    const user = await this.authService.getUserByUsername(username);
+
+    if (!user) {
+        throw new NotFoundException({
+        errors: { profile: ['not found'] },
+        });
+    }
+
+    return new ProfileResponseDto(
+        new ProfileResult({
+        username: user.username,
+        bio: user.bio ?? null,
+        image: user.image === 'default-avatar.png' ? null : user.image,
+        }),
+    );
     }
 }

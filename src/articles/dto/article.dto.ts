@@ -7,6 +7,15 @@ export class ArticleResult {
     title: string;
 
     @Expose()
+    description: string;
+
+    @Expose()
+    body: string;
+
+    @Expose()
+    tagList: string[];
+    
+    @Expose()
     slug: string;
 
     @Expose()

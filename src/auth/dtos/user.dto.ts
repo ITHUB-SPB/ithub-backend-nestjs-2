@@ -1,6 +1,7 @@
 import { ValidateNested } from 'class-validator'
 import { Expose, Exclude, Type } from 'class-transformer'
 
+@Exclude()
 export class UserResult {
     @Expose()
     username: string;

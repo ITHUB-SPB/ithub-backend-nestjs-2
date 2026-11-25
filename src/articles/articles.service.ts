@@ -25,19 +25,33 @@ export class ArticlesService {
       return null
     }
 
+    
     const newArticle = this.articleRepository.create({
       title: createArticleDtoWithUser.article.title,
-      author
-    })
+      description: createArticleDtoWithUser.article.description,
+      body: createArticleDtoWithUser.article.body,
+      tagList: createArticleDtoWithUser.article.tagList ?? [],
+      author,
+    });
+
 
     return await this.articleRepository.save(newArticle)
   }
 
-  findOne(slug: string) {
-    return `This action returns a #${slug} article`;
+  
+  async findOne(slug: string): Promise<Article | null> {
+    return await this.articleRepository.findOne({
+      where: { slug },
+      relations: { author: true },
+    });
   }
 
-  remove(slug: string) {
-    return `This action removes a #${slug} article`;
+
+  async remove(slug: string): Promise<boolean> {
+    const result = await this.articleRepository.delete({
+      slug,
+    });
+
+    return (result.affected ?? 0) > 0;
   }
 }

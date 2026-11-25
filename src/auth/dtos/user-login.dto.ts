@@ -13,7 +13,7 @@ class UserLogin {
     @ApiProperty({ example: "auth_1@test.com" })
     @IsString({ message: ValidationErrorMessage.REQUIRED })
     @IsNotEmpty({ message: ValidationErrorMessage.REQUIRED })
-    // @IsEmail({ message: ValidationErrorMessage.INVALID })
+@IsEmail({}, { message: ValidationErrorMessage.INVALID })
     email: string;
 }
 

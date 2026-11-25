@@ -68,14 +68,14 @@ describe("ArticlesController (e2e)", () => {
         body: "Test body content",
         tagList: [`d_${uid}`, `t_${uid}`],
         author: {
-          username: `art_${uid}`
+          username: `auth_${uid}`
         }
       }
     }
 
     await registerHelper(app, uid)
     const loginResponse = await loginHelper(app, uid)
-    const token = loginResponse.body.token
+    const token = loginResponse.body.user.token;
 
     const response = await request(app.getHttpServer())
       .post('/api/articles')
@@ -85,9 +85,124 @@ describe("ArticlesController (e2e)", () => {
     expect(response.statusCode).toBe(201)
     expect(response.body).toMatchObject(expectedResponse)
 
-    assert.isString(response.body.createdAt)
-    expect(response.body.createdAt).toEqual(expect.stringMatching(/^\\d{4}-\\d{2}-\\d{2}T/));
+    assert.isString(response.body.article.createdAt);
+    expect(response.body.article.createdAt).toEqual(
+    expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/)
+  );
+});
+
+it('получение тегов статей (GET /api/tags)', async () => {
+  const uid = 2;
+
+  const registerResponse = await registerHelper(app, uid);
+  const token = registerResponse.body.user.token;
+
+  await request(app.getHttpServer())
+    .post('/api/articles')
+    .set('Authorization', `Token ${token}`)
+    .send({
+      article: {
+        title: 'Test Tags Article',
+        description: 'Description',
+        body: 'Article body',
+        tagList: ['nestjs', 'typescript'],
+      },
+    })
+    .expect(201);
+
+  const response = await request(app.getHttpServer())
+    .get('/api/tags')
+    .expect(200);
+
+  expect(response.body).toHaveProperty('tags');
+  expect(response.body.tags).toContain('nestjs');
+  expect(response.body.tags).toContain('typescript');
+});
+
+
+it('получение статьи по slug (GET /api/articles/:slug)', async () => {
+  const uid = 3;
+
+  const registerResponse = await registerHelper(app, uid);
+  const token = registerResponse.body.user.token;
+
+  const createResponse = await request(app.getHttpServer())
+    .post('/api/articles')
+    .set('Authorization', `Token ${token}`)
+    .send({
+      article: {
+        title: 'My Test Article',
+        description: 'Test description',
+        body: 'Test body',
+        tagList: ['nestjs', 'backend'],
+      },
+    })
+    .expect(201);
+
+  const slug = createResponse.body.article.slug;
+
+  const response = await request(app.getHttpServer())
+    .get(`/api/articles/${slug}`)
+    .expect(200);
+
+  expect(response.body.article).toMatchObject({
+    slug,
+    title: 'My Test Article',
+    description: 'Test description',
+    body: 'Test body',
+    tagList: ['nestjs', 'backend'],
+    author: {
+      username: 'auth_3',
+    },
   });
+
+  await request(app.getHttpServer())
+    .get('/api/articles/nonexistent-article')
+    .expect(404);
+});
+
+it('удаление статьи (DELETE /api/articles/:slug)', async () => {
+  const owner = await registerHelper(app, 4);
+  const other = await registerHelper(app, 5);
+
+  const ownerToken = owner.body.user.token;
+  const otherToken = other.body.user.token;
+
+  const created = await request(app.getHttpServer())
+    .post('/api/articles')
+    .set('Authorization', `Token ${ownerToken}`)
+    .send({
+      article: {
+        title: 'Article To Delete',
+        description: 'Test description',
+        body: 'Test content',
+        tagList: ['testing'],
+      },
+    })
+    .expect(201);
+
+  const slug = created.body.article.slug;
+
+  await request(app.getHttpServer())
+    .delete(`/api/articles/${slug}`)
+    .expect(401);
+
+  const forbidden = await request(app.getHttpServer())
+    .delete(`/api/articles/${slug}`)
+    .set('Authorization', `Token ${otherToken}`)
+    .expect(403);
+
+  expect(forbidden.body.errors.article).toContain('forbidden');
+
+  await request(app.getHttpServer())
+    .delete(`/api/articles/${slug}`)
+    .set('Authorization', `Token ${ownerToken}`)
+    .expect(204);
+
+  await request(app.getHttpServer())
+    .get(`/api/articles/${slug}`)
+    .expect(404);
+});
 
   afterEach(async () => {
     await app.close();

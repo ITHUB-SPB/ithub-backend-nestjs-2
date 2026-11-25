@@ -7,12 +7,15 @@ import { ArticlesService } from './articles.service.js';
 import { ArticlesController } from './articles.controller.js';
 import { Article } from './entities/article.entity.js';
 
+import { TagsController } from './tags.controller.js';
+import { TagsService } from './tags.service.js';
+
 @Module({
   imports: [
     TypeOrmModule.forFeature([Article]),
     AuthModule
   ],
-  controllers: [ArticlesController],
-  providers: [ArticlesService],
+  controllers: [ArticlesController, TagsController],
+  providers: [ArticlesService, TagsService],
 })
 export class ArticlesModule {}

@@ -8,6 +8,10 @@ import { ArticleResponseDto } from './dto/article.dto.js';
 
 import { AuthService } from '../auth/auth.service.js';
 
+import { NotFoundException } from '@nestjs/common';
+
+import { HttpCode, UnauthorizedException } from '@nestjs/common';
+
 @Controller('api/articles')
 export class ArticlesController {
   constructor(
@@ -43,13 +47,66 @@ export class ArticlesController {
     })
   }
 
+  
   @Get(':slug')
-  findOne(@Param('slug') slug: string) {
-    return this.articlesService.findOne(slug);
+  async findOne(@Param('slug') slug: string) {
+    const article = await this.articlesService.findOne(slug);
+
+    if (!article) {
+      throw new NotFoundException({
+        errors: {
+          article: ['not found'],
+        },
+      });
+    }
+
+  return new ArticleResponseDto({
+    ...article,
+    author: { ...article.author },
+  });
+}
+
+@ApiBearerAuth('JWT')
+@HttpCode(204)
+@Delete(':slug')
+async remove(
+  @Param('slug') slug: string,
+  @AuthToken() authorizationToken: string,
+): Promise<void> {
+  if (!authorizationToken) {
+    throw new UnauthorizedException({
+      errors: { token: ['is missing'] },
+    });
   }
 
-  @Delete(':slug')
-  remove(@Param('slug') slug: string) {
-    return this.articlesService.remove(slug);
+  const user = await this.authService.getUserByToken(authorizationToken);
+
+  if (!user) {
+    throw new UnauthorizedException({
+      errors: { token: ['is invalid'] },
+    });
   }
+
+  const article = await this.articlesService.findOne(slug);
+
+  if (!article) {
+    throw new NotFoundException({
+      errors: { article: ['not found'] },
+    });
+  }
+
+  if (article.author.id !== user.id) {
+    throw new ForbiddenException({
+      errors: { article: ['forbidden'] },
+    });
+  }
+
+  const deleted = await this.articlesService.remove(slug);
+
+  if (!deleted) {
+    throw new NotFoundException({
+      errors: { article: ['not found'] },
+    });
+  }
+}
 }

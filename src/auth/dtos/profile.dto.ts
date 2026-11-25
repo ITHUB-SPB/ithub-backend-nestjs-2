@@ -14,3 +14,13 @@ export class ProfileResult {
         Object.assign(this, data)
     }
 }
+
+export class ProfileResponseDto {
+  @Expose()
+  @Type(() => ProfileResult)
+  profile: ProfileResult;
+
+  constructor(profile: ProfileResult) {
+    this.profile = profile;
+  }
+}
