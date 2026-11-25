@@ -1,6 +1,9 @@
+import { join } from 'node:path'
+
 import { Module, ClassSerializerInterceptor } from "@nestjs/common";
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
-
+import { AuthenticationModule } from "@nestjs/authentication";
+import { MailModule, SmtpTransport, LogMailTransport, FileTemplateEngine } from "@nestjs/mail";
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
@@ -23,6 +26,33 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appKey: process.env.OBSERVE_APP_KEY ?? "YOUR_APP_KEY",
       appSecret: process.env.OBSERVE_APP_SECRET ?? "YOUR_APP_SECRET",
       serviceId: "ithub-backend-nestjs-2",
+    }),
+    MailModule.forRoot({
+      transport: process.env.NODE_ENV === "production"
+        ? new SmtpTransport({
+          secure: false,
+          port: Number(process.env.SMTP_PORT),
+          host: process.env.SMTP_HOST,
+          auth: {
+            user: process.env.SMTP_USER ?? "",
+            pass: process.env.SMTP_PASSWORD ?? "",
+          }
+        })
+        : new LogMailTransport(),
+      templates: new FileTemplateEngine({ dir: join(import.meta.dirname, 'mail', 'templates') }),
+      from: `Support <noreply@${process.env.SMTP_HOST}>`
+    }),
+    AuthenticationModule.forRoot({
+      session: {
+        absoluteTtl: '14d',
+        idleTtl: '3d',
+        cookie: {
+          path: '/',
+          secure: false,
+          sameSite: 'lax'
+        },
+        cookieName: 'realworld__session'
+      },
     }),
     TypeOrmModule.forRoot({
       type: "postgres",

@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { SignInService, Public } from '@nestjs/authentication';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
@@ -10,8 +11,12 @@ import AuthToken from '../common/auth-token.decorator.js';
 
 @Controller('api')
 export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+    constructor(
+        private readonly authService: AuthService,
+        private readonly signInService: SignInService
+    ) { }
 
+    @Public()
     @Post('/users')
     @SerializeOptions({ type: UserResponseDto })
     async register(@Body() userCreateDto: UserCreateRequestDto): Promise<UserResponseDto> {
@@ -23,6 +28,8 @@ export class AuthController {
 
         try {
             const createdUser = await this.authService.register(userCreateDto)
+            await this.signInService.signIn(createdUser.email, { method: 'password' })
+            // подумать, всегда ли требуется возвращать access-токены
             const token = await this.authService.createAccessToken(createdUser)
             return new UserResponseDto({ ...createdUser, token })
         } catch (error) {
@@ -32,6 +39,7 @@ export class AuthController {
         }
     }
 
+    @Public()
     @HttpCode(200)
     @Post('/users/login')
     async login(@Body() userLoginDto: UserLoginRequestDto): Promise<UserResponseDto> {
@@ -47,6 +55,10 @@ export class AuthController {
             throw new UnauthorizedException()
         }
 
+        // подумать, для чего может понадобиться {session}
+        const { session } = await this.signInService.signIn(user.email, { method: 'password' })
+
+        // подумать, всегда ли требуется возвращать access-токены
         const token = await this.authService.createAccessToken(user)
 
         return new UserResponseDto({ ...user, token })

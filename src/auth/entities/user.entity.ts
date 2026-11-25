@@ -1,5 +1,6 @@
-import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm'
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm'
 import { Article } from '../../articles/entities/article.entity.js';
+import type { Role } from './role.entity.js';
 
 @Entity()
 export class User {
@@ -23,4 +24,7 @@ export class User {
 
     @OneToMany(() => Article, article => article.author)
     articles: Article[]
+
+    @ManyToOne('Role', (role: Role) => role.users)
+    role: Role
 }

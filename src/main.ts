@@ -17,6 +17,8 @@ async function bootstrap() {
     }),
   );
 
+  app.enableCsrfProtection()
+
   const config = new DocumentBuilder()
     .setTitle('Realworld example')
     .setDescription('Realworld API docs')
