@@ -67,6 +67,10 @@ export class AuthController {
             throw new UnauthorizedException()
         }
 
+        if (!user.emailVerified) {
+            throw new UnauthorizedException()
+        }
+
         const isPasswordCorrect = this.authService.verifyPassword(userLoginDto.user.password, user.password)
 
         if (!isPasswordCorrect) {

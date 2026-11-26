@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthenticationModule } from '@nestjs/authentication';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
+import { AuthenticationStore } from './providers/auth.store.js'
 import { SessionAuth } from './providers/session-auth.provider.js';
 import { User } from './entities/user.entity.js';
 import { Session } from './entities/session.entity.js';
@@ -22,7 +23,7 @@ import { EmailToken } from './entities/email-token.entity.js';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, SessionAuth],
+  providers: [AuthService, SessionAuth, AuthenticationStore],
   exports: [AuthService]
 })
 export class AuthModule {
