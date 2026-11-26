@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SignInService, Public } from '@nestjs/authentication';
+import { EmailVerificationService } from '@nestjs/authentication';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
@@ -13,7 +14,8 @@ import AuthToken from '../common/auth-token.decorator.js';
 export class AuthController {
     constructor(
         private readonly authService: AuthService,
-        private readonly signInService: SignInService
+        private readonly signInService: SignInService,
+        private readonly emailVerificationService: EmailVerificationService,
     ) { }
 
     @Public()
@@ -29,6 +31,8 @@ export class AuthController {
         try {
             const createdUser = await this.authService.register(userCreateDto)
             await this.signInService.signIn(createdUser.email, { method: 'password' })
+            await this.emailVerificationService.send(createdUser)
+
             // подумать, всегда ли требуется возвращать access-токены
             const token = await this.authService.createAccessToken(createdUser)
             return new UserResponseDto({ ...createdUser, token })
@@ -37,6 +41,19 @@ export class AuthController {
             console.error(error)
             throw new InternalServerErrorException()
         }
+    }
+
+    @Public()
+    @HttpCode(200)
+    @Get('/users/verify')
+    async verify(@Query('token') token: string) {
+        const verified = await this.emailVerificationService.verify(token)
+
+        if (!verified) {
+            throw new UnauthorizedException('Invalid or expired link')
+        }
+
+        return { email: verified.email, emailVerified: true }
     }
 
     @Public()

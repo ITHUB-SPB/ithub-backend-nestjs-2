@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { Module, ClassSerializerInterceptor } from "@nestjs/common";
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { AuthenticationModule } from "@nestjs/authentication";
-import { MailModule, SmtpTransport, LogMailTransport, FileTemplateEngine } from "@nestjs/mail";
+import { MailModule as GlobalMailModule, SmtpTransport, LogMailTransport, FileTemplateEngine } from "@nestjs/mail";
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
@@ -11,9 +11,12 @@ import { AppController } from "./app.controller.js";
 
 import { AuthModule } from './auth/auth.module.js';
 import { ArticlesModule } from './articles/articles.module.js';
+import { MailModule } from './mail/mail.module.js';
 
+import { Role } from './auth/entities/role.entity.js';
 import { User } from "./auth/entities/user.entity.js";
 import { Article } from "./articles/entities/article.entity.js";
+
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -27,7 +30,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       appSecret: process.env.OBSERVE_APP_SECRET ?? "YOUR_APP_SECRET",
       serviceId: "ithub-backend-nestjs-2",
     }),
-    MailModule.forRoot({
+    GlobalMailModule.forRoot({
       transport: process.env.NODE_ENV === "production"
         ? new SmtpTransport({
           secure: false,
@@ -40,7 +43,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         })
         : new LogMailTransport(),
       templates: new FileTemplateEngine({ dir: join(import.meta.dirname, 'mail', 'templates') }),
-      from: `Support <noreply@${process.env.SMTP_HOST}>`
+      from: `Support <noreply@medium.com>`
     }),
     AuthenticationModule.forRoot({
       session: {
@@ -53,6 +56,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         },
         cookieName: 'realworld__session'
       },
+      emailVerification: { url: 'http://localhost:3000/api/users/verify' }
     }),
     TypeOrmModule.forRoot({
       type: "postgres",
@@ -62,10 +66,11 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       password: 'postgres',
       database: 'dev',
       synchronize: true, // не забыть выключить в проде
-      entities: [User, Article]
+      entities: [User, Article, Role]
     }),
     AuthModule,
     ArticlesModule,
+    MailModule,
   ],
   providers: [
     {

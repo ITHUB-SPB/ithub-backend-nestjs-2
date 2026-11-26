@@ -37,6 +37,22 @@ export class AuthService {
         })
     }
 
+    async markVerified(userEmail: string, email: string): Promise<boolean> {
+        const user = await this.userRepository.findOneBy({
+            email: userEmail
+        })
+
+        if (!user) {
+            return false
+        }
+
+        await this.userRepository.update('emailVerified', {
+            emailVerified: true
+        })
+
+        return true
+    }
+
     async createAccessToken(payload: User): Promise<string> {
         // быть готовым к ошибкам
         return new JwtSigner({ key: jwtSecretKey }).sign({ sub: JSON.stringify(payload) })

@@ -22,6 +22,9 @@ export class User {
     @Column({ default: "default-avatar.png" })
     image: string;
 
+    @Column({ default: false })
+    emailVerified: boolean;
+
     @OneToMany(() => Article, article => article.author)
     articles: Article[]
 
