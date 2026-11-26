@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { User } from './entities/user.entity.js';
 
-import { JwtSigner, JwtVerifier, CurrentUser } from '@nestjs/authentication'
+import { JwtSigner, } from '@nestjs/authentication'
 
 const argon2Key = '69f21d6966c50daf'
 const jwtSecretKey = '63ab69f21d6966c50dafd3f7c607ddd8'
@@ -64,31 +64,6 @@ export class AuthService {
         return this.userRepository.findOneBy({
             email
         })
-    }
-
-    async getUserByToken(token: string): Promise<User | null> {
-        if (!token) {
-            return null
-        }
-
-        const parsedToken = token.match(/^(Token|Bearer) (.+)$/)
-
-        if (!parsedToken || !parsedToken?.at(2)) {
-            return null
-        }
-
-        const verifier = new JwtVerifier({ key: jwtSecretKey })
-
-        try {
-            const result = await verifier.verify(parsedToken.at(2)!)
-            if (!result.sub) {
-                throw new Error('No subject in result')
-            }
-            return JSON.parse(result.sub)
-        } catch (error) {
-            console.error(error)
-            return null
-        }
     }
 
     async verifyPassword(plainPassword: string, correctHashedPassword: string): Promise<boolean> {

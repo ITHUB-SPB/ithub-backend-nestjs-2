@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { SignInService, Public, Authenticate, CurrentSession, CurrentUser, SessionCookieProvider } from '@nestjs/authentication';
-import { EmailVerificationService } from '@nestjs/authentication';
+import { SignInService, Public, Authenticate, CurrentSession, CurrentUser, SessionCookieProvider, JwtBearerProvider } from '@nestjs/authentication';
+import { EmailVerificationService, TokenService } from '@nestjs/authentication';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
@@ -17,6 +17,7 @@ export class AuthController {
         private readonly authService: AuthService,
         private readonly signInService: SignInService,
         private readonly emailVerificationService: EmailVerificationService,
+        private readonly jwtTokenService: TokenService
     ) { }
 
     @Public()
@@ -36,6 +37,7 @@ export class AuthController {
 
             // подумать, всегда ли требуется возвращать access-токены
             const token = await this.authService.createAccessToken(createdUser)
+            
             return new UserResponseDto({ ...createdUser, token })
         } catch (error) {
             // подумать, может быть стоит разделить по типам ошибок
@@ -88,7 +90,7 @@ export class AuthController {
 
     // @ApiBearerAuth('JWT')
     @Authenticate({
-        providers: [SessionCookieProvider],
+        providers: [SessionCookieProvider, JwtBearerProvider],
         verifiedEmail: true
     })
     @Get('/user')
@@ -110,5 +112,38 @@ export class AuthController {
             ...user,
             token: authorizationToken.match(/^(Token|Bearer) (.+)$/)!.at(2)!
         })
+    }
+
+    @Public()
+    @Post('/users/token')
+    @HttpCode(200)
+    async issue(@Body() userLoginDto: UserLoginRequestDto) {
+        const user = await this.authService.getUserByEmail(userLoginDto.user.email)
+
+        if (!user) {
+            throw new UnauthorizedException()
+        }
+
+        if (!user.emailVerified) {
+            throw new UnauthorizedException()
+        }
+
+        const isPasswordCorrect = this.authService.verifyPassword(userLoginDto.user.password, user.password)
+
+        if (!isPasswordCorrect) {
+            throw new UnauthorizedException()
+        }
+
+        return this.jwtTokenService.issue(user.id, {
+            method: 'password',
+            claims: { amr: ['pwd'] },
+        });
+    }
+
+    @Public()
+    @Post('/users/token/refresh')
+    @HttpCode(200)
+    refresh(@Body('refreshToken') refreshToken: string) {
+        return this.jwtTokenService.refresh(refreshToken);
     }
 }

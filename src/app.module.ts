@@ -2,7 +2,7 @@ import { Module, ClassSerializerInterceptor } from "@nestjs/common";
 import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule, ConfigService } from "@nestjs/config";
 
 import { AppController } from "./app.controller.js";
 
@@ -21,7 +21,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ ignoreEnvFile: true }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
     // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com,
     // then run `npx @nestjs/observe link` to write your key pair into .env.
@@ -31,15 +31,19 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       serviceId: "ithub-backend-nestjs-2",
     }),
     AuthModule,
-    TypeOrmModule.forRoot({
-      type: "postgres",
-      host: "localhost",
-      port: 5431,
-      username: 'postgres',
-      password: 'postgres',
-      database: 'dev',
-      synchronize: true, // не забыть выключить в проде
-      entities: [User, Article, Role, Session, RefreshToken, EmailToken]
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) => ({
+        type: "postgres",
+        host: config.getOrThrow('DATABASE_HOST'),
+        port: Number(config.getOrThrow('DATABASE_PORT')),
+        username: config.getOrThrow('DATABASE_USER'),
+        password: config.getOrThrow('DATABASE_PASSWORD'),
+        database: config.getOrThrow('DATABASE_DB'),
+        synchronize: true, // не забыть выключить в проде
+        entities: [User, Article, Role, Session, RefreshToken, EmailToken]
+      })
     }),
     ArticlesModule,
     MailModule,
