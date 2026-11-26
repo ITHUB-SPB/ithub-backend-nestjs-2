@@ -1,16 +1,30 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthenticationModule } from '@nestjs/authentication';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
 import { SessionAuth } from './providers/session-auth.provider.js';
 import { User } from './entities/user.entity.js';
+import { Session } from './entities/session.entity.js';
+import { RefreshToken } from './entities/refresh-token.entity.js';
+import { EmailToken } from './entities/email-token.entity.js';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [
+    TypeOrmModule.forFeature([User, Session, RefreshToken, EmailToken]),
+    AuthenticationModule.forRoot({
+      session: {
+        absoluteTtl: '14d',
+        idleTtl: '3d',
+        cookieName: 'realworld__session'
+      },
+      emailVerification: { url: 'http://localhost:3000/api/users/verify' },
+    }),
+  ],
   controllers: [AuthController],
   providers: [AuthService, SessionAuth],
   exports: [AuthService]
 })
-export class AuthModule { 
+export class AuthModule {
   // onModuleInit
 }

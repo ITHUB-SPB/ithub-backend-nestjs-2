@@ -27,7 +27,6 @@ export class ArticleResponseDto {
     article: ArticleResult
 
     constructor(data: ArticleResult) {
-        console.log(data)
         this.article = data
     }
 }

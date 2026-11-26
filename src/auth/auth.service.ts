@@ -37,16 +37,18 @@ export class AuthService {
         })
     }
 
-    async markVerified(userEmail: string, email: string): Promise<boolean> {
+    async markVerified(userId: string, email: string): Promise<boolean> {
         const user = await this.userRepository.findOneBy({
-            email: userEmail
+            id: userId,
+            email
         })
 
         if (!user) {
             return false
         }
 
-        await this.userRepository.update('emailVerified', {
+        await this.userRepository.save({
+            ...user,
             emailVerified: true
         })
 

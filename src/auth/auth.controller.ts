@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
-import { SignInService, Public } from '@nestjs/authentication';
+import { SignInService, Public, Authenticate, CurrentSession, CurrentUser, SessionCookieProvider } from '@nestjs/authentication';
 import { EmailVerificationService } from '@nestjs/authentication';
 
 import { AuthService } from './auth.service.js';
@@ -9,6 +9,7 @@ import { UserResponseDto, UserResult } from './dtos/user.dto.js';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { UserLoginRequestDto } from './dtos/user-login.dto.js';
 import AuthToken from '../common/auth-token.decorator.js';
+import { User } from './entities/user.entity.js';
 
 @Controller('api')
 export class AuthController {
@@ -81,20 +82,25 @@ export class AuthController {
         return new UserResponseDto({ ...user, token })
     }
 
-    @ApiBearerAuth('JWT')
+    // @ApiBearerAuth('JWT')
+    @Authenticate({
+        providers: [SessionCookieProvider],
+        verifiedEmail: true
+    })
     @Get('/user')
     async me(
+        @CurrentUser() user: User, // TODO: не требовать одновременной подачи хедера и кук 
         @AuthToken() authorizationToken: string,
     ): Promise<UserResponseDto> {
         // решить проблему устаревания данных пэйлоада
         // например, при обновлении биографии пользователя
         // в действующем токене будет устаревшая информация
 
-        const user = await this.authService.getUserByToken(authorizationToken)
+        // const user = await this.authService.getUserByToken(authorizationToken)
 
-        if (!user) {
-            throw new UnauthorizedException()
-        }
+        // if (!user) {
+        //     throw new UnauthorizedException()
+        // }
 
         return new UserResponseDto({
             ...user,
