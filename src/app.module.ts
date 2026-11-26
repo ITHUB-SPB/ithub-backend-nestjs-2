@@ -1,8 +1,9 @@
 import { Module, ClassSerializerInterceptor } from "@nestjs/common";
-import { APP_INTERCEPTOR, Reflector } from '@nestjs/core';
+import { APP_INTERCEPTOR, APP_GUARD, Reflector } from '@nestjs/core';
 import { createObserveModule } from "@nestjs/observe";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { ConfigModule, ConfigService } from "@nestjs/config";
+import { ThrottlerGuard, ThrottlerModule, minutes, normalizeIp } from '@nestjs/throttler'
 
 import { AppController } from "./app.controller.js";
 
@@ -22,6 +23,13 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 @Module({
   imports: [
     ConfigModule.forRoot({ ignoreEnvFile: true }),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        { name: 'default', ttl: minutes(1), limit: 100, blockDuration: minutes(10) }
+        // TODO 1: дописать skipIf для юнит-тестов (игнорировать в тестовом окружении)
+        // TODO 2: написать отдельный тротлер для маршрутов аутентификации
+      ]
+    }),
     // Distributed tracing, auto-correlated logs, request/job metrics, error
     // telemetry, alarms, and more — out of the box. Sign up at https://observe.nestjs.com,
     // then run `npx @nestjs/observe link` to write your key pair into .env.
@@ -59,6 +67,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
         });
       },
     },
+    { provide: APP_GUARD, useClass: ThrottlerGuard }
   ],
   controllers: [AppController],
 })

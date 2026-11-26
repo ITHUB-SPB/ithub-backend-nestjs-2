@@ -8,8 +8,8 @@ import { User } from './entities/user.entity.js';
 
 import { JwtSigner, } from '@nestjs/authentication'
 
-const argon2Key = '69f21d6966c50daf'
-const jwtSecretKey = '63ab69f21d6966c50dafd3f7c607ddd8'
+const argon2Key = '69f21d6966c50daf' // TODO: перенести в env, принимать через ConfigService
+const jwtSecretKey = '63ab69f21d6966c50dafd3f7c607ddd8'  // TODO: избавиться
 
 
 @Injectable()
@@ -56,7 +56,7 @@ export class AuthService {
     }
 
     async createAccessToken(payload: User): Promise<string> {
-        // быть готовым к ошибкам
+        // TODO: избавиться
         return new JwtSigner({ key: jwtSecretKey }).sign({ sub: JSON.stringify(payload) })
     }
 
