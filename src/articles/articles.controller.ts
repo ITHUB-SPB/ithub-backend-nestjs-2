@@ -11,6 +11,7 @@ import {
   ConflictException,
   SerializeOptions,
   UnauthorizedException,
+  HttpCode,
 } from "@nestjs/common";
 import AuthToken from "../common/auth-token.decorator.js";
 import { ApiBearerAuth, ApiSecurity } from "@nestjs/swagger";
@@ -61,6 +62,7 @@ export class ArticlesController {
   }
 
   @Delete(":slug")
+  @HttpCode(204)
   async remove(
     @Param("slug") slug: string,
     @AuthToken() authorizationToken: string,

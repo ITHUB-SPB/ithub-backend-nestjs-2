@@ -11,6 +11,7 @@ import { ArticlesModule } from './articles/articles.module.js';
 
 import { User } from "./auth/entities/user.entity.js";
 import { Article } from "./articles/entities/article.entity.js";
+import { TagsModule } from "./articles/tags.module.js";
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -36,6 +37,7 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
     }),
     AuthModule,
     ArticlesModule,
+    TagsModule,
   ],
   providers: [
     {

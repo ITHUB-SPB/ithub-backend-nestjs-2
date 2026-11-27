@@ -42,7 +42,7 @@ export class ArticlesService {
     });
 
     if (!article) {
-      throw new NotFoundException("not found");
+      throw new NotFoundException({ errors: { article: ["not found"] } });
     }
 
     return article;
@@ -55,11 +55,11 @@ export class ArticlesService {
     });
 
     if (!article) {
-      throw new NotFoundException("not found");
+      throw new NotFoundException({ errors: { article: ["not found"] } });
     }
 
     if (article.author.email !== userEmail) {
-      throw new ForbiddenException('can delete only your own articles');
+      throw new ForbiddenException({ errors: { article: ["forbidden"] } });
     }
 
     await this.articleRepository.remove(article);

@@ -19,8 +19,13 @@ export class ArticleResult {
   tagList: string[];
 
   @Expose()
-  @Type(() => String)
-  @Transform(({ value }) => value.toISOString())
+  @Transform(({ value }) => {
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    return value;
+  })
   createdAt: Date;
 
   @Expose()
