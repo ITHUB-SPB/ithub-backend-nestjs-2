@@ -1,34 +1,40 @@
-import { ValidateNested } from 'class-validator'
-import { Expose, Exclude, Type } from 'class-transformer'
+import { ValidateNested } from "class-validator";
+import { Expose, Exclude, Type } from "class-transformer";
 
 export class UserResult {
-    @Expose()
-    username: string;
+  @Expose()
+  username: string;
 
-    @Expose()
-    email: string;
+  @Expose()
+  email: string;
 
-    @Expose()
-    bio: string | null;
+  @Expose()
+  bio: string | null;
 
-    @Expose()
-    image: string | null;
+  @Expose()
+  image: string | null;
 
-    @Expose()
-    token: string;
+  @Expose()
+  token: string;
 
-    constructor(data: UserResult) {
-        Object.assign(this, data)
+  constructor(data?: Partial<UserResult>) {
+    if (data) {
+      this.username = data.username!;
+      this.email = data.email!;
+      this.bio = data.bio ?? null;
+      this.image = data.image ?? null;
+      this.token = data.token!;
     }
+  }
 }
 
 export class UserResponseDto {
-    @ValidateNested()
-    @Expose()
-    @Type(() => UserResult)
-    user: UserResult
+  @Expose()
+  user: UserResult;
 
-    constructor(data: UserResult) {
-        this.user = new UserResult(data)
+  constructor(data?: Partial<UserResult>) {
+    if (data) {
+      this.user = new UserResult(data);
     }
+  }
 }

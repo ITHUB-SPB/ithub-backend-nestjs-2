@@ -11,9 +11,9 @@ class UserLogin {
     password: string;
 
     @ApiProperty({ example: "auth_1@test.com" })
+    @IsEmail({},{ message: ValidationErrorMessage.INVALID })
     @IsString({ message: ValidationErrorMessage.REQUIRED })
     @IsNotEmpty({ message: ValidationErrorMessage.REQUIRED })
-    // @IsEmail({ message: ValidationErrorMessage.INVALID })
     email: string;
 }
 

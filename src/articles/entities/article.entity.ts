@@ -1,31 +1,47 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, BeforeInsert } from 'typeorm'
-import { type User } from '../../auth/entities/user.entity.js';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  ManyToMany,
+  BeforeInsert,
+} from "typeorm";
+import { type User } from "../../auth/entities/user.entity.js";
 
 @Entity()
 export class Article {
-    @PrimaryGeneratedColumn("uuid")
-    id: string;
+  @PrimaryGeneratedColumn("uuid")
+  id: string;
 
-    @Column()
-    title: string;
+  @Column()
+  title: string;
 
-    @ManyToOne('User', (user: User) => user.articles, { cascade: true })
-    author: User
+  @Column()
+  description: string;
 
-    @Column({ nullable: true })
-    slug: string;
+  @Column("text")
+  body: string;
 
-    @Column({ nullable: true })
-    createdAt: Date
+  @Column("text", { array: true, default: [] })
+  tagList: string[];
 
-    @BeforeInsert()
-    setCreatedAt() {
-        this.createdAt = new Date()
-    }
+  @ManyToOne("User", (user: User) => user.articles, { cascade: true })
+  author: User;
 
-    @BeforeInsert()
-    setSlug() {
-        const words = this.title.replaceAll(/[^\w]/g, ' ').trim().split(/\s+/)
-        this.slug = words.join('-').toLowerCase()
-    }
+  @Column({ nullable: true })
+  slug: string;
+
+  @Column({ nullable: true })
+  createdAt: Date;
+
+  @BeforeInsert()
+  setCreatedAt() {
+    this.createdAt = new Date();
+  }
+
+  @BeforeInsert()
+  setSlug() {
+    const words = this.title.replaceAll(/[^\w]/g, " ").trim().split(/\s+/);
+    this.slug = words.join("-").toLowerCase();
+  }
 }
