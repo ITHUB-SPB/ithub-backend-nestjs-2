@@ -1,4 +1,5 @@
-import { Exclude, Expose, Type } from 'class-transformer'
+import { Expose, Type } from 'class-transformer'
+import { ValidateNested } from 'class-validator'
 
 export class ProfileResult {
     @Expose()
@@ -12,5 +13,16 @@ export class ProfileResult {
 
     constructor(data: Partial<ProfileResult>) {
         Object.assign(this, data)
+    }
+}
+
+export class ProfileResponseDto {
+    @Expose()
+    @ValidateNested()
+    @Type(() => ProfileResult)
+    profile: ProfileResult;
+
+    constructor(data: Partial<ProfileResult>) {
+        this.profile = new ProfileResult(data)
     }
 }

@@ -1,4 +1,4 @@
-import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional, ValidateNested } from 'class-validator'
+import { IsString, IsNotEmpty, IsEmail, ValidateNested } from 'class-validator'
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { ValidationErrorMessage } from '../../common/validation.enum.js';
@@ -13,11 +13,10 @@ class UserLogin {
     @ApiProperty({ example: "auth_1@test.com" })
     @IsString({ message: ValidationErrorMessage.REQUIRED })
     @IsNotEmpty({ message: ValidationErrorMessage.REQUIRED })
-    // @IsEmail({ message: ValidationErrorMessage.INVALID })
+    @IsEmail({}, { message: ValidationErrorMessage.INVALID })
     email: string;
 }
 
-// TODO распаковывать пайпом
 export class UserLoginRequestDto {
     @ValidateNested()
     @Type(() => UserLogin)

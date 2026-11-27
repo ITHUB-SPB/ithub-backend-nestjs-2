@@ -75,7 +75,7 @@ describe("ArticlesController (e2e)", () => {
 
     await registerHelper(app, uid)
     const loginResponse = await loginHelper(app, uid)
-    const token = loginResponse.body.token
+    const token = loginResponse.body.user.token
 
     const response = await request(app.getHttpServer())
       .post('/api/articles')
@@ -85,8 +85,8 @@ describe("ArticlesController (e2e)", () => {
     expect(response.statusCode).toBe(201)
     expect(response.body).toMatchObject(expectedResponse)
 
-    assert.isString(response.body.createdAt)
-    expect(response.body.createdAt).toEqual(expect.stringMatching(/^\\d{4}-\\d{2}-\\d{2}T/));
+    assert.isString(response.body.article.createdAt)
+    expect(response.body.article.createdAt).toEqual(expect.stringMatching(/^\d{4}-\d{2}-\d{2}T/));
   });
 
   afterEach(async () => {

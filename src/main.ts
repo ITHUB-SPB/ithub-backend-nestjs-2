@@ -1,5 +1,6 @@
-import { NestFactory, Reflector } from "@nestjs/core";
-import { ValidationPipe } from "@nestjs/common";
+import { NestFactory } from "@nestjs/core";
+import { ValidationError } from "class-validator";
+import { UnprocessableEntityException, ValidationPipe } from "@nestjs/common";
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule, ObserveInstrument } from "./app.module.js";
 
@@ -14,6 +15,29 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       transform: true,
+      exceptionFactory: (validationErrors: ValidationError[]) => {
+        const errors: Record<string, string[]> = {}
+
+        const addErrors = (items: ValidationError[]) => {
+          for (const item of items) {
+            if (item.children?.length) {
+              addErrors(item.children)
+              continue
+            }
+
+            const message = item.value === '' || item.value === null || item.value === undefined
+              ? "can't be blank"
+              : Object.values(item.constraints ?? {})[0] ?? 'is invalid'
+            errors[item.property] ??= []
+            if (!errors[item.property].includes(message)) {
+              errors[item.property].push(message)
+            }
+          }
+        }
+
+        addErrors(validationErrors)
+        return new UnprocessableEntityException({ errors })
+      },
     }),
   );
 

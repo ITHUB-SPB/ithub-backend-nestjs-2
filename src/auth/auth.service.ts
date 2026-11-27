@@ -6,7 +6,7 @@ import { Repository } from 'typeorm';
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { User } from './entities/user.entity.js';
 
-import { JwtSigner, JwtVerifier, CurrentUser } from '@nestjs/authentication'
+import { JwtSigner, JwtVerifier } from '@nestjs/authentication'
 
 const argon2Key = '69f21d6966c50daf'
 const jwtSecretKey = '63ab69f21d6966c50dafd3f7c607ddd8'
@@ -31,6 +31,7 @@ export class AuthService {
             }, (error, result) => {
                 if (error) {
                     reject(error)
+                    return
                 }
                 resolve(result.toString('hex'))
             })
@@ -46,6 +47,10 @@ export class AuthService {
         return this.userRepository.findOneBy({
             email
         })
+    }
+
+    async getUserByUsername(username: string): Promise<User | null> {
+        return this.userRepository.findOneBy({ username })
     }
 
     async getUserByToken(token: string): Promise<User | null> {
@@ -66,9 +71,12 @@ export class AuthService {
             if (!result.sub) {
                 throw new Error('No subject in result')
             }
-            return JSON.parse(result.sub)
-        } catch (error) {
-            console.error(error)
+            const tokenUser = JSON.parse(result.sub) as Partial<User>
+            if (!tokenUser.email) {
+                return null
+            }
+            return this.getUserByEmail(tokenUser.email)
+        } catch {
             return null
         }
     }
@@ -83,7 +91,8 @@ export class AuthService {
         const hashedPassword = await this.hashPassword(createUserDto.user.password)
 
         const userToCreate = this.userRepository.create({
-            ...createUserDto.user,
+            username: createUserDto.user.username,
+            email: createUserDto.user.email,
             password: hashedPassword
         })
 

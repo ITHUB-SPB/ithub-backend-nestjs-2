@@ -1,31 +1,29 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, ManyToMany, BeforeInsert } from 'typeorm'
-import { type User } from '../../auth/entities/user.entity.js';
+import { Entity, Column, PrimaryGeneratedColumn, ManyToOne } from 'typeorm'
+import { User } from '../../auth/entities/user.entity.js';
 
 @Entity()
 export class Article {
     @PrimaryGeneratedColumn("uuid")
     id: string;
 
+    @Column({ unique: true })
+    slug: string;
+
     @Column()
     title: string;
 
-    @ManyToOne('User', (user: User) => user.articles, { cascade: true })
+    @Column()
+    description: string;
+
+    @Column('text')
+    body: string;
+
+    @Column({ type: 'simple-json', default: '[]' })
+    tagList: string[];
+
+    @ManyToOne(() => User, (user) => user.articles, { nullable: false, onDelete: 'CASCADE' })
     author: User
 
-    @Column({ nullable: true })
-    slug: string;
-
-    @Column({ nullable: true })
+    @Column()
     createdAt: Date
-
-    @BeforeInsert()
-    setCreatedAt() {
-        this.createdAt = new Date()
-    }
-
-    @BeforeInsert()
-    setSlug() {
-        const words = this.title.replaceAll(/[^\w]/g, ' ').trim().split(/\s+/)
-        this.slug = words.join('-').toLowerCase()
-    }
 }
