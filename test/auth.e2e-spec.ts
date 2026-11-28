@@ -1,132 +1,259 @@
-import { Test, TestingModule } from "@nestjs/testing";
-import { Reflector } from "@nestjs/core";
-import { INestApplication, ClassSerializerInterceptor } from "@nestjs/common";
-import { TypeOrmModule, getRepositoryToken } from "@nestjs/typeorm";
-import { type Repository } from "typeorm";
-import request from "supertest";
-import { expect, assert } from 'vitest'
-import { App } from "supertest/types.js";
+import request from 'supertest';
 
-import { ArticlesModule } from "../src/articles/articles.module.js";
-import { AuthModule } from "../src/auth/auth.module.js";
-import { User } from "../src/auth/entities/user.entity.js";
-import { Article } from "../src/articles/entities/article.entity.js";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from 'vitest';
 
-import { loginHelper, registerHelper } from "./helpers.js";
+import {
+  createTestApp,
+  loginUser,
+  registerAndGetToken,
+  registerUser,
+  resetDatabase,
+  type TestApp,
+  type UserCredentials,
+} from './helpers.js';
 
-describe("AuthController (e2e)", () => {
-  let app: INestApplication<App>;
+describe('AuthController (e2e)', () => {
+  let app: TestApp;
+
+  const validUser: UserCredentials = {
+    username: 'auth_1',
+    email: 'auth_1@test.com',
+    password: 'password123',
+  };
+
+  beforeAll(async () => {
+    app = await createTestApp();
+  });
 
   beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        AuthModule,
-        ArticlesModule,
-        TypeOrmModule.forRoot({
-          type: "postgres",
-          host: "localhost",
-          port: 5431,
-          username: 'postgres',
-          password: 'postgres',
-          database: 'dev',
-          synchronize: true, // не забыть выключить в проде
-          entities: [User, Article]
-        }),
-      ],
-    }).compile();
-
-    app = moduleFixture.createNestApplication();
-
-    app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)))
-
-    const userRepository = app.get<Repository<User>>(getRepositoryToken(User));
-    const articleRepository = app.get<Repository<Article>>(getRepositoryToken(Article));
-
-    await userRepository.clear({ cascade: true })
-    await articleRepository.clear({ cascade: true })
-
-    await app.init();
+    await resetDatabase(app);
   });
 
-  it("REGISTER /api/users (POST)", async () => {
-    const uid = 1
+  afterAll(async () => {
+    await app.close();
+  });
 
-    const expectedResponse = {
+  it('registers a user', async () => {
+    const response = await registerUser(app, validUser);
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
       user: {
-        username: `auth_${uid}`,
-        email: `auth_${uid}@test.com`,
+        username: validUser.username,
+        email: validUser.email,
         bio: null,
-        image: "default-avatar.png"
-      }
-    }
-
-    const response = await registerHelper(app, uid)
-
-    expect(response.statusCode).toBe(201)
-    expect(response.body).toMatchObject(expectedResponse)
-
-    assert.isString(response.body.user?.token)
-    assert.isNotEmpty(response.body.user.token)
-
-    assert.notExists(response.body.user?.password)
+        image: 'default-avatar.png',
+      },
+    });
+    expect(response.body.user.token).toEqual(expect.any(String));
+    expect(response.body.user.token).not.toBe('');
+    expect(response.body.user.password).toBeUndefined();
   });
 
-  it("LOGIN /api/users/login (POST)", async () => {
-    const uid = 1
+  it('logs in a registered user', async () => {
+    await registerUser(app, validUser);
 
-    await registerHelper(app, uid)
+    const response = await loginUser(app, {
+      email: validUser.email,
+      password: validUser.password,
+    });
 
-    const expectedResponse = {
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
       user: {
-        username: `auth_${uid}`,
-        email: `auth_${uid}@test.com`,
+        username: validUser.username,
+        email: validUser.email,
         bio: null,
-        image: "default-avatar.png"
-      }
-    }
-
-    const response = await loginHelper(app, uid)
-
-    expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject(expectedResponse)
-
-    assert.isString(response.body.user?.token)
-    assert.isNotEmpty(response.body.user.token)
-
-    assert.notExists(response.body.user?.password)
+        image: 'default-avatar.png',
+      },
+    });
+    expect(response.body.user.token).toEqual(expect.any(String));
+    expect(response.body.user.password).toBeUndefined();
   });
 
-  it("GET CURRENT /api/user (GET)", async () => {
-    const uid = 1
+  it.each([
+    ['username', '', 'validation_username'],
+    ['email', '', 'validation_email'],
+    ['password', '', 'validation_password'],
+  ] as const)(
+    'rejects an empty %s on registration',
+    async (field, value, suffix) => {
+      const user = {
+        username: `user_${suffix}`,
+        email: `${suffix}@test.com`,
+        password: 'password123',
+        [field]: value,
+      };
 
-    await registerHelper(app, uid)
-    const loginResponse = await loginHelper(app, uid)
+      const response = await registerUser(app, user);
 
-    const token = loginResponse.body.user.token
+      expect(response.status).toBe(422);
+      expect(response.body.errors[field]).toEqual(["can't be blank"]);
+    },
+  );
+
+  it('rejects a malformed registration email', async () => {
+    const response = await registerUser(app, {
+      ...validUser,
+      username: 'malformed_email',
+      email: 'malformed_email_not_an_email',
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.errors.email).toEqual(['is invalid']);
+  });
+
+  it('rejects a duplicate username', async () => {
+    await registerUser(app, validUser);
+
+    const response = await registerUser(app, {
+      ...validUser,
+      email: 'another_email@test.com',
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.errors.username).toEqual([
+      'has already been taken',
+    ]);
+  });
+
+  it('rejects a duplicate email', async () => {
+    await registerUser(app, validUser);
+
+    const response = await registerUser(app, {
+      ...validUser,
+      username: 'another_username',
+    });
+
+    expect(response.status).toBe(409);
+    expect(response.body.errors.email).toEqual([
+      'has already been taken',
+    ]);
+  });
+
+  it.each([
+    ['email', '', "can't be blank"],
+    ['password', '', "can't be blank"],
+  ] as const)(
+    'rejects an empty login %s',
+    async (field, value, message) => {
+      await registerUser(app, validUser);
+
+      const credentials = {
+        email: validUser.email,
+        password: validUser.password,
+        [field]: value,
+      };
+      const response = await loginUser(app, credentials);
+
+      expect(response.status).toBe(422);
+      expect(response.body.errors[field]).toEqual([message]);
+    },
+  );
+
+  it('rejects a malformed login email', async () => {
+    const response = await loginUser(app, {
+      email: 'auth_1@',
+      password: validUser.password,
+    });
+
+    expect(response.status).toBe(422);
+    expect(response.body.errors.email).toEqual(['is invalid']);
+  });
+
+  it('rejects a wrong password', async () => {
+    await registerUser(app, validUser);
+
+    const response = await loginUser(app, {
+      email: validUser.email,
+      password: 'wrongpassword',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.errors.credentials).toEqual(['invalid']);
+  });
+
+  it('gets the current user with a token', async () => {
+    const currentUser = {
+      ...validUser,
+      username: 'current_user',
+      email: 'current_user@test.com',
+    };
+    const token = await registerAndGetToken(app, currentUser);
 
     const response = await request(app.getHttpServer())
       .get('/api/user')
-      .set('Authorization', `Token ${token}`)
+      .set('Authorization', `Token ${token}`);
 
-    const expectedResponse = {
-      user: {
-        username: `auth_${uid}`,
-        email: `auth_${uid}@test.com`,
-        bio: null,
-        image: "default-avatar.png",
-      }
-    }
-
-    expect(response.statusCode).toBe(200)
-    expect(response.body).toMatchObject(expectedResponse)
-
-    assert.isString(response.body.user?.token)
-    assert.isNotEmpty(response.body.user.token)
-
-    assert.notExists(response.body.user?.password)
+    expect(response.status).toBe(200);
+    expect(response.body.user).toMatchObject({
+      username: currentUser.username,
+      email: currentUser.email,
+      bio: null,
+      image: 'default-avatar.png',
+    });
+    expect(response.body.user.token).toBe(token);
   });
 
-  afterEach(async () => {
-    await app.close();
+  it('rejects getting the current user without a token', async () => {
+    const response = await request(app.getHttpServer()).get(
+      '/api/user',
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.errors.token).toEqual(['is missing']);
+  });
+
+  it('gets a profile without authentication', async () => {
+    await registerUser(app, {
+      ...validUser,
+      username: 'profile_user',
+      email: 'profile_user@test.com',
+    });
+
+    const response = await request(app.getHttpServer()).get(
+      '/api/profiles/profile_user',
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      profile: {
+        username: 'profile_user',
+        bio: null,
+        image: null,
+      },
+    });
+  });
+
+  it('gets a profile with authentication', async () => {
+    const profileUser = {
+      ...validUser,
+      username: 'profile_user',
+      email: 'profile_user@test.com',
+    };
+    await registerUser(app, profileUser);
+    const token = await registerAndGetToken(app, {
+      ...validUser,
+      username: 'profile_viewer',
+      email: 'profile_viewer@test.com',
+    });
+
+    const response = await request(app.getHttpServer())
+      .get('/api/profiles/profile_user')
+      .set('Authorization', `Token ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.profile).toEqual({
+      username: 'profile_user',
+      bio: null,
+      image: null,
+    });
   });
 });
