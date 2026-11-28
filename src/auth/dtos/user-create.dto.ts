@@ -1,6 +1,8 @@
-import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional, ValidateNested } from 'class-validator'
+import { IsString, IsStrongPassword, IsNotEmpty, IsEmail, IsOptional, ValidateNested, IsIn } from 'class-validator'
 import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+
+import type { RoleId } from '../entities/role.entity.js';
 import { ValidationErrorMessage } from '../../common/validation.enum.js';
 
 class UserCreate {
@@ -21,6 +23,10 @@ class UserCreate {
     @IsNotEmpty({ message: ValidationErrorMessage.REQUIRED })
     // @IsEmail({ message: ValidationErrorMessage.INVALID })
     email: string;
+
+    @ApiProperty({ example: "author" })
+    @IsIn(["author", "moderator", "superadmin"])
+    role: RoleId;
 }
 
 // TODO распаковывать пайпом

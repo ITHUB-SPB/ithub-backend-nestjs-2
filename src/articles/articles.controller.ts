@@ -16,8 +16,11 @@ export class ArticlesController {
     private readonly authService: AuthService
   ) { }
 
-
-  @ApiBearerAuth('JWT')
+  // @ApiBearerAuth('JWT')
+  @Authenticate({
+    providers: [SessionCookieProvider, JwtBearerProvider],
+    verifiedEmail: true
+  })
   @Post()
   async create(
     @CurrentUser() user: User,
@@ -39,10 +42,15 @@ export class ArticlesController {
   }
 
   @Get(':slug')
+  @Public()
   findOne(@Param('slug') slug: string) {
     return this.articlesService.findOne(slug);
   }
 
+  @Authenticate({
+    providers: [SessionCookieProvider, JwtBearerProvider],
+    verifiedEmail: true
+  })
   @Delete(':slug')
   remove(@Param('slug') slug: string) {
     return this.articlesService.remove(slug);

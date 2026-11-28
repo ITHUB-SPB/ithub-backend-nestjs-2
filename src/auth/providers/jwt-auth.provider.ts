@@ -9,7 +9,7 @@ export class JwtAuth extends JwtBearerProvider<User> {
     private readonly authService: AuthService,
     registry: AuthenticationRegistry,
   ) {
-    super({ realm: "realworld " }); // TODO подумать, нужен ли realm
+    super({ realm: "realworld" });
     registry.registerProvider(this, { order: 1 });
   }
 

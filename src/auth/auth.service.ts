@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 
 import { UserCreateRequestDto } from './dtos/user-create.dto.js';
 import { User } from './entities/user.entity.js';
+import { Role } from './entities/role.entity.js';
 
 import { JwtSigner, } from '@nestjs/authentication'
 
@@ -17,6 +18,7 @@ export class AuthService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        private readonly roleRepository: Repository<Role>,
     ) { }
 
     async hashPassword(plainPassword: string): Promise<string> {
@@ -56,7 +58,7 @@ export class AuthService {
     }
 
     async createAccessToken(payload: User): Promise<string> {
-        // TODO: избавиться
+        // TODO: избавиться, заменив на встроенные методы
         return new JwtSigner({ key: jwtSecretKey }).sign({ sub: JSON.stringify(payload) })
     }
 
@@ -75,9 +77,16 @@ export class AuthService {
     async register(createUserDto: UserCreateRequestDto): Promise<User> {
         const hashedPassword = await this.hashPassword(createUserDto.user.password)
 
+        const role = await this.roleRepository.findOneOrFail({
+            where: {
+                id: createUserDto.user.role
+            }
+        })
+
         const userToCreate = this.userRepository.create({
             ...createUserDto.user,
-            password: hashedPassword
+            password: hashedPassword,
+            role
         })
 
         return await this.userRepository.save(userToCreate)

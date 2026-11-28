@@ -1,7 +1,7 @@
 import { Body, Controller, Get, Headers, HttpException, Post, InternalServerErrorException, UnauthorizedException, HttpCode, SerializeOptions, Query } from '@nestjs/common';
 import { ApiCreatedResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { SignInService, Public, Authenticate, CurrentSession, CurrentUser, SessionCookieProvider, JwtBearerProvider } from '@nestjs/authentication';
-import { EmailVerificationService, TokenService } from '@nestjs/authentication';
+import { EmailVerificationService, TokenService, type SessionRecord, type JwtClaims } from '@nestjs/authentication';
 
 import { AuthService } from './auth.service.js';
 import { ValidationErrorMessage } from '../common/validation.enum.js';
@@ -37,7 +37,7 @@ export class AuthController {
 
             // подумать, всегда ли требуется возвращать access-токены
             const token = await this.authService.createAccessToken(createdUser)
-            
+
             return new UserResponseDto({ ...createdUser, token })
         } catch (error) {
             // подумать, может быть стоит разделить по типам ошибок
@@ -95,22 +95,19 @@ export class AuthController {
     })
     @Get('/user')
     async me(
+        @CurrentSession() session: SessionRecord | JwtClaims,
         @CurrentUser() user: User, // TODO: не требовать одновременной подачи хедера и кук 
-        @AuthToken() authorizationToken: string,
     ): Promise<UserResponseDto> {
         // решить проблему устаревания данных пэйлоада
         // например, при обновлении биографии пользователя
         // в действующем токене будет устаревшая информация
 
-        // const user = await this.authService.getUserByToken(authorizationToken)
-
-        // if (!user) {
-        //     throw new UnauthorizedException()
-        // }
+        console.log(session)
 
         return new UserResponseDto({
             ...user,
-            token: authorizationToken.match(/^(Token|Bearer) (.+)$/)!.at(2)!
+            token: 'test'
+            // token: authorizationToken.match(/^(Token|Bearer) (.+)$/)!.at(2)!
         })
     }
 

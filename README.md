@@ -10,6 +10,14 @@
 <a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
 <a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
 
+
+## КТ #3. Доработка провайдеров и контроллеров аутентификации. Механика сброса пароля. Авторизация. Работа с файлами.
+
+- починить JWT-провайдер и контроллер `/api/user` (3 балла);
+- добавить механику сброса паролей (2 балла);
+
+
+
 ## КТ #2. Пользователи, базовый функционал статей. Работа с данными через `TypeORM`. Сквозные тесты на `vitest` и `supertest`.
 
 В данной контрольной точке вам предлагается реализовать и протестировать часть функционала согласно спецификации. Ошибки и статус коды по всему функционалу должны соответствовать требованиям.

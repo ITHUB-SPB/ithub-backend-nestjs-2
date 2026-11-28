@@ -1,6 +1,7 @@
 import { Module, OnModuleInit } from '@nestjs/common';
 import { TypeOrmModule, InjectRepository } from '@nestjs/typeorm';
 import { AuthenticationModule } from '@nestjs/authentication';
+import { AuthorizationModule } from '@nestjs/authorization'
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { type Repository } from 'typeorm';
 
@@ -36,6 +37,7 @@ import { EmailToken } from './entities/email-token.entity.js';
         emailVerification: { url: 'http://localhost:3000/api/users/verify' },
       })
     }),
+    AuthorizationModule.forRoot({ policies: [] })
   ],
   controllers: [AuthController],
   providers: [AuthService, SessionAuth, JwtAuth, AuthenticationStore],
